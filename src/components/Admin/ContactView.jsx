@@ -1,34 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import View from "./View";
 import Pagination from "./Pagination";
 import Search from "./Search";
 import useTable from "./Hooks/useTable";
 
-export default function TestimonialsView() {
-  const [testimonials, setTestimonials] = useState([]);
+export default function ContactView() {
+  const [contact, setContact] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-   useEffect(() => {
-    fetch("/API/testimonials.json")
+  // Fetch data
+  useEffect(() => {
+    fetch("/API/contacts.json")
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
       })
-      .then((data) => setTestimonials(data))
-      .catch((err) => console.error("Failed to fetch testimonials:", err));
+      .then((data) => setContact(data))
+      .catch((err) => console.error("Failed to fetch contacts:", err));
   }, []);
 
-  const { currentPage, setCurrentPage, totalPages, currentRows } = useTable(
-    testimonials,
-    searchTerm,
-    ["name", "email", "message"],
-  );
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    currentRows,
+  } = useTable(contact, searchTerm, ["name", "email", "message"]);
 
   const columns = [
     { title: "ID", key: "id" },
     { title: "Name", key: "name" },
     { title: "Email", key: "email" },
-    { title: "Rating", key: "rating" },
     { title: "Message", key: "message" },
   ];
 
@@ -36,13 +37,13 @@ export default function TestimonialsView() {
     {
       label: "Delete",
       className: "bg-red-500 text-white hover:bg-red-600",
-      onClick: (testimonial) => console.log("Delete", testimonial),
+      onClick: (contact) => console.log("Delete", contact),
     },
   ];
 
   return (
     <div className="p-4">
-      {/* Top Bar with Search */}
+      {/* Top Bar */}
       <div className="flex mb-4 gap-2">
         <Search
           searchTerm={searchTerm}

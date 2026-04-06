@@ -1,34 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "../Button";
 import View from "./View";
-import AddDestination from "./AddDestination";
+import Pagination from "./Pagination";
+import Search from "./Search";
+import useTable from "./Hooks/useTable"; 
 
 export default function Destinations() {
-  const [destinations, setDestinations] = useState([
-    {
-      id: 1,
-      name: "Paris",
-      country: "France",
-      price: "$1200",
-      duration: "5 days",
-      category: "Romantic",
-    },
-    {
-      id: 2,
-      name: "Tokyo",
-      country: "Japan",
-      price: "$1500",
-      duration: "7 days",
-      category: "Cultural",
-    },
-    {
-      id: 3,
-      name: "Sydney",
-      country: "Australia",
-      price: "$1800",
-      duration: "6 days",
-      category: "Adventure",
-    },
-  ]);
+  const [destinations, setDestinations] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch("/API/destinations.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data) => setDestinations(data))
+      .catch((err) => console.error("Failed to fetch destinations:", err));
+  }, []);
+
+  const {
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    currentRows,
+  } = useTable(destinations, searchTerm, ["name", "country", "category"]);
+
+  const goToAddDestination = () => navigate("/Admin/add-destination");
 
   const columns = [
     { title: "ID", key: "id" },
@@ -52,14 +53,29 @@ export default function Destinations() {
     },
   ];
 
-   const handleSave = (newDest) => {
-    const nextId = destinations.length > 0 ? destinations[destinations.length - 1].id + 1 : 1;
-    setDestinations([...destinations, { id: nextId, ...newDest }]);
-  };
-
   return (
-    
-        <View columns={columns} data={destinations} actions={actions} />
-  )
-  
+    <div className="p-4">
+      {/* Top Bar */}
+      <div className="flex mb-4 gap-2">
+        <Search
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          placeholder="Search by name, country, or category"
+        />
+        <div className="ml-auto">
+          <Button onClick={goToAddDestination}>Add Destination</Button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <View columns={columns} data={currentRows} actions={actions} />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  );
 }

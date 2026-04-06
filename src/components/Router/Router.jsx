@@ -2,10 +2,19 @@
 import React from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import App from "../../App"; // your main landing page
+import App from "../../App";
 import AdminHome from "../Admin/AdminHome";
+import UsersView from "../Admin/UsersView";
+import TestimonialsView from "../Admin/TestimonialView";
+import Destinations from "../Admin/Destinations";
+import Layout from "../Admin/Layout";
+import ContactView from "../Admin/ContactView";
+import ChangePassword from "../Admin/ChangePassword";
+import AddDestination from "../Admin/AddDestination";
+import Dashboard from "../Tourist/Dashboard";
+import TouristLayout from "../Tourist/Layout";
+import Reviews from "../Tourist/Reviews";
 
-// ✅ Protected route using Redux
 const PrivateRoute = ({ children }) => {
   const { isLoggedIn } = useSelector((state) => state.auth);
   return isLoggedIn ? children : <Navigate to="/" />;
@@ -15,16 +24,73 @@ const PrivateRoute = ({ children }) => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />, // Login / Home page
+    element: <App />,
   },
   {
-    path: "/adminhome",
+    path: "/Admin",
     element: (
       <PrivateRoute>
-        <AdminHome />
+        <Layout />
       </PrivateRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <AdminHome />,
+      },
+      {
+        path: "adminhome",
+        element: <AdminHome />,
+      },
+      {
+        path: "users",
+        element: <UsersView />,
+      },
+      {
+        path: "testimonials",
+        element: <TestimonialsView />,
+      },
+      {
+        path: "contact",
+        element: <ContactView />,
+      },
+      {
+        path: "destinations",
+        element: <Destinations />,
+      },
+      {
+        path: "change-password",
+        element: <ChangePassword />,
+      },
+      {
+        path: "add-destination",
+        element: <AddDestination />,
+      }
+    ],
   },
+  {
+    path: "/Tourist",
+    element: (
+      <PrivateRoute>
+        <TouristLayout />
+      </PrivateRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: "touristhome",
+        element: <Dashboard />,
+      },
+      {
+        path: "reviews",
+        element: <Reviews />,
+      },
+    ],
+  },
+
 ]);
 
 export default function AppRouter() {

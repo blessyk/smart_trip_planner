@@ -1,11 +1,14 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 
-export default function Sidebar({ active, onNavigate }) {
+export default function Sidebar() {
   const menuItems = [
-    { name: "View Users", key: "view-users" },
-    { name: "View Destinations", key: "view-destinations" },
-    { name: "View Testimonials", key: "view-testimonials" },
-    { name: "Change Password", key: "change-password" },
+    { name: "Admin Home", path: "/Admin/adminhome" },
+    { name: "View Users", path: "/Admin/users" },
+    { name: "View Destinations", path: "/Admin/destinations" },
+    { name: "View Testimonials", path: "/Admin/testimonials" },
+    { name: "View Contact Messages", path: "/Admin/contact" },
+    { name: "Change Password", path: "/Admin/change-password" },
   ];
 
   return (
@@ -13,14 +16,16 @@ export default function Sidebar({ active, onNavigate }) {
       <h2 className="text-xl font-bold mb-6">Admin Menu</h2>
 
       {menuItems.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onNavigate(item.key)}
-          className={`text-left px-4 py-2 rounded-lg hover:bg-blue-700 transition
-            ${active === item.key ? "bg-blue-800 font-semibold" : ""}`}
+        <NavLink
+          key={item.path}
+          to={item.path}
+          className={({ isActive }) =>
+            `block px-4 py-2 rounded-lg transition text-left
+            ${isActive ? "bg-blue-800 font-semibold" : "hover:bg-blue-700"}`
+          }
         >
           {item.name}
-        </button>
+        </NavLink>
       ))}
     </aside>
   );

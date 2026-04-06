@@ -1,12 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import View from "./View";
+import Pagination from "./Pagination";
+import Search from "./Search";
+import useTable from "./Hooks/useTable";
 
 export default function UsersView() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "Alice", email: "alice@example.com", role: "Admin" },
-    { id: 2, name: "Bob", email: "bob@example.com", role: "User" },
-    { id: 3, name: "Charlie", email: "charlie@example.com", role: "User" },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch users from API
+  useEffect(() => {
+    fetch("/API/users.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Failed to fetch users:", err));
+  }, []);
+
+  // Use reusable table hook for search + pagination
+  const { currentPage, setCurrentPage, totalPages, currentRows } = useTable(
+    users,
+    searchTerm,
+    ["name", "email", "role"],
+    10 // rows per page
+  );
 
   const columns = [
     { title: "ID", key: "id" },
@@ -28,5 +47,26 @@ export default function UsersView() {
     },
   ];
 
-  return <View columns={columns} data={users} actions={actions} />;
+  return (
+    <div className="p-4">
+      {/* Top Bar with Search */}
+      <div className="flex mb-4 gap-2">
+        <Search
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          placeholder="Search by name, email, or role"
+        />
+      </div>
+
+      {/* Table */}
+      <View columns={columns} data={currentRows} actions={actions} />
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </div>
+  );
 }

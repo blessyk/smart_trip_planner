@@ -15,7 +15,7 @@ const loginSchema = yup.object().shape({
   password: yup.string().required("Password is required"),
 });
 
-export default function LoginModal({ closeModal, onSwitch, onLogin }) {
+export default function LoginModal({ closeModal, onSwitch }) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { isLoggedIn, user } = useSelector((state) => state.auth);
@@ -41,10 +41,10 @@ export default function LoginModal({ closeModal, onSwitch, onLogin }) {
     toast.success("Login successful!");
     closeModal();
     dispatch(loginSuccess(user))
-    console.log(isLoggedIn)
-    navigate("/adminhome") 
-    // Optional callback for Redux or navigation
-    if (onLogin) onLogin(user);
+    if(user.name === "Admin")
+    navigate("/Admin") 
+  else
+    navigate("/Tourist")
   };
 
   return (

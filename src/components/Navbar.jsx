@@ -7,7 +7,7 @@ export default function Navbar() {
     const [modal, setModal] = useState(null);
     console.log(modal)
     return (
-        <nav className="fixed bg-[#0A3D62] text-white px-6 md:px-12 py-5 shadow-md z-50 w-full">
+        <nav className="fixed top-0 bg-[#0A3D62] text-white px-6 md:px-12 py-5 shadow-md z-50 w-full">
             <div className="flex items-center justify-between">
 
                 {/* Logo */}

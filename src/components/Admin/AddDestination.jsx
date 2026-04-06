@@ -1,102 +1,122 @@
-import React, { useState } from "react";
-import Input from "../Input"; // Adjust path if Input is outside the folder
+import React from "react";
+import Input from "../Input";
+import Button from "../Button";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
-export default function AddDestination({ onSave }) {
-  const [form, setForm] = useState({
-    name: "",
-    country: "",
-    price: "",
-    duration: "",
-    category: "",
+// Validation schema
+const schema = yup.object().shape({
+  name: yup.string().required("Name is required"),
+  country: yup.string().required("Country is required"),
+  category: yup.string().required("Category is required"),
+  description: yup.string().required("Description is required"),
+  price: yup
+    .number()
+    .typeError("Price must be a number")
+    .positive("Price must be positive")
+    .required("Price is required"),
+  duration: yup.string().required("Duration is required"),
+});
+
+// Sample categories
+const categories = ["Beach", "Adventure", "Cultural", "Wildlife", "Relaxation"];
+
+export default function AddDestination() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+  } = useForm({
+    resolver: yupResolver(schema),
   });
 
-  const [errors, setErrors] = useState({});
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+  // Format price as currency while typing
+  const handlePriceChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, ""); // remove non-numbers
+    const formatted = raw ? parseInt(raw).toLocaleString() : "";
+    setValue("price", formatted, { shouldValidate: true });
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!form.name) newErrors.name = "Name is required";
-    if (!form.country) newErrors.country = "Country is required";
-    if (!form.price) newErrors.price = "Price is required";
-    if (!form.duration) newErrors.duration = "Duration is required";
-    if (!form.category) newErrors.category = "Category is required";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    console.log("Destination Data:", form);
-    if (onSave) onSave(form);
-
-    setForm({
-      name: "",
-      country: "",
-      price: "",
-      duration: "",
-      category: "",
-    });
+  const onSubmit = (data) => {
+    console.log(data); // UI only
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md max-w-md mx-auto">
-      <h2 className="text-xl font-bold text-[#0A3D62] mb-4">Add Destination</h2>
-      <form onSubmit={handleSubmit}>
-        <Input
-          label="Destination Name"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Enter destination name"
-          error={errors.name}
-        />
-        <Input
-          label="Country"
-          name="country"
-          value={form.country}
-          onChange={handleChange}
-          placeholder="Enter country"
-          error={errors.country}
-        />
-        <Input
-          label="Price"
-          name="price"
-          type="number"
-          value={form.price}
-          onChange={handleChange}
-          placeholder="Enter price"
-          error={errors.price}
-        />
-        <Input
-          label="Duration"
-          name="duration"
-          value={form.duration}
-          onChange={handleChange}
-          placeholder="Enter duration (e.g., 5 days)"
-          error={errors.duration}
-        />
-        <Input
-          label="Category"
-          name="category"
-          value={form.category}
-          onChange={handleChange}
-          placeholder="Enter category (Adventure, Cultural, Romantic)"
-          error={errors.category}
-        />
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-lg">
+        <h2 className="text-2xl font-bold text-center text-[#0A3D62] mb-4">
+          Add Destination
+        </h2>
 
-        <button
-          type="submit"
-          className="w-full bg-[#0A3D62] text-white py-2 rounded-lg hover:bg-blue-900 transition mt-2"
-        >
-          Save Destination
-        </button>
-      </form>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Input
+            label="Name"
+            placeholder="Enter destination name"
+            {...register("name")}
+            error={errors.name?.message}
+          />
+
+          <Input
+            label="Country"
+            placeholder="Enter country"
+            {...register("country")}
+            error={errors.country?.message}
+          />
+
+          {/* Category dropdown */}
+          <div className="mb-4">
+            <label className="block mb-1 text-black">Category</label>
+            <select
+              {...register("category")}
+              className={`w-full px-4 py-2 rounded-lg border 
+                bg-transparent text-black
+                focus:outline-none focus:ring-2 focus:ring-[#0A3D62]
+                ${errors.category ? "border-red-500" : "border-gray-300"}`}
+            >
+              <option value="">Select category</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+            {errors.category && (
+              <span className="text-red-500 text-sm">
+                {errors.category.message}
+              </span>
+            )}
+          </div>
+
+          <Input
+            label="Description"
+            placeholder="Enter description"
+            {...register("description")}
+            error={errors.description?.message}
+          />
+
+          <Input
+            label="Price"
+            placeholder="Enter price"
+            {...register("price")}
+            error={errors.price?.message}
+            onChange={handlePriceChange}
+          />
+
+          <Input
+            label="Duration"
+            placeholder="Enter duration (e.g., 5 days)"
+            {...register("duration")}
+            error={errors.duration?.message}
+          />
+
+          {/* Right-aligned submit button */}
+          <div className="flex justify-end mt-4">
+            <Button type="submit">Add Destination</Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

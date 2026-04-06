@@ -101,10 +101,10 @@ export default function RegisterModal({ onSwitch, closeModal }) {
               error={errors.phone?.message}
             />
 
-            <label className="block mb-1 text-black">Upload ID proof</label>
-            <input
-              type="file"
-              className="w-full border rounded-lg px-4 py-2"
+            <Input
+              placeholder="Enter your aadhaar number"
+              {...register("aadhaar")}
+              error={errors.aadhaar?.message}
             />
 
             <Input
