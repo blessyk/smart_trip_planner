@@ -14,6 +14,9 @@ import AddDestination from "../Admin/AddDestination";
 import Dashboard from "../Tourist/Dashboard";
 import TouristLayout from "../Tourist/Layout";
 import Reviews from "../Tourist/Reviews";
+import Profile from "../Tourist/Profile";
+import DestinationSearch from "../Tourist/DestinationSearch";
+import TripPlanner from "../Tourist/TripPlanner";
 
 const PrivateRoute = ({ children }) => {
   const { isLoggedIn } = useSelector((state) => state.auth);
@@ -88,6 +91,18 @@ const router = createBrowserRouter([
         path: "reviews",
         element: <Reviews />,
       },
+      {
+        path: "profile",
+        element: <Profile />,
+      },
+      {
+        path: "DestinationSearch",
+        element: <DestinationSearch />,
+      },
+      {
+        path: "TripPlanner",
+        element: <TripPlanner />,
+      }
     ],
   },
 
