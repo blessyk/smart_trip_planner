@@ -44,7 +44,7 @@ export default function ContactView() {
   return (
     <div className="p-4">
       {/* Top Bar */}
-      <div className="flex mb-4 gap-2">
+      <div className="w-full">
         <Search
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}

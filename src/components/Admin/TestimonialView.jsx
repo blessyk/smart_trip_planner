@@ -43,7 +43,7 @@ export default function TestimonialsView() {
   return (
     <div className="p-4">
       {/* Top Bar with Search */}
-      <div className="flex mb-4 gap-2">
+      <div className="w-full">
         <Search
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
