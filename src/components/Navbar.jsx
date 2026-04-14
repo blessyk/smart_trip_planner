@@ -15,7 +15,7 @@ export default function Navbar() {
                     <img
                         src="/logo.png"
                         alt="logo"
-                        className="w-10 h-10 object-contain"
+                        className="w-60 h-10 object-contain"
                     />
                     SmartTripPlanner
                 </div>
