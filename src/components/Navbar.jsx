@@ -11,7 +11,7 @@ export default function Navbar() {
             <div className="flex items-center justify-between">
 
                 {/* Logo */}
-                <div className="flex items-center gap-2 text-xl font-bold">
+                <div className="flex items-center gap-2 font-bold">
                     <img
                         src="/logo.png"
                         alt="logo"
