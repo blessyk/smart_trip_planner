@@ -17,7 +17,6 @@ export default function Navbar() {
                         alt="logo"
                         className="w-60 h-10 object-contain"
                     />
-                    SmartTripPlanner
                 </div>
                 <div className="hidden md:flex items-center gap-8">
                     <ul className="flex gap-6 text-lg font-medium">
