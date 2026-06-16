@@ -11,13 +11,12 @@ export default function Navbar() {
             <div className="flex items-center justify-between">
 
                 {/* Logo */}
-                <div className="flex items-center gap-2 text-xl font-bold">
+                <div className="flex items-center gap-2 font-bold">
                     <img
                         src="/logo.png"
                         alt="logo"
-                        className="w-10 h-10 object-contain"
+                        className="w-40 h-10 object-container"
                     />
-                    SmartTripPlanner
                 </div>
                 <div className="hidden md:flex items-center gap-8">
                     <ul className="flex gap-6 text-lg font-medium">
