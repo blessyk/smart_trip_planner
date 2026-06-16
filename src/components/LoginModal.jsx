@@ -5,7 +5,7 @@ import * as yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import Input from "./Input";
 import "react-toastify/dist/ReactToastify.css";
-import { loginSuccess } from "../components/redux/authSlice";
+import { loginUser, fetchUserProfile, logout } from "./redux/authSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -16,9 +16,9 @@ const loginSchema = yup.object().shape({
 });
 
 export default function LoginModal({ closeModal, onSwitch }) {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
-    const { isLoggedIn, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { isLoggedIn, user, loading } = useSelector((state) => state.auth);
   const {
     register,
     handleSubmit,
@@ -28,23 +28,24 @@ export default function LoginModal({ closeModal, onSwitch }) {
     mode: "onChange", 
   });
 
-  const onSubmit = (data) => {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-    const user = users.find(
-      (u) => u.email === data.email && u.password === data.password
-    );
-
-    if (!user) {
-      toast.error("Invalid email or password");
-      return;
+  const onSubmit = async (data) => {
+    try {
+      await dispatch(loginUser(data)).unwrap();
+      const profileResult = await dispatch(fetchUserProfile()).unwrap();
+      const userRole = profileResult?.data?.user?.role;
+      
+      if (userRole === "admin") {
+        toast.error("Access denied. Please use the admin login portal.");
+        dispatch(logout());
+      } else {
+        toast.success("Login successful!");
+        closeModal();
+        navigate("/Tourist");
+      }
+    } catch (err) {
+      const errorMsg = err?.message || err?.error || "Invalid email or password";
+      toast.error(errorMsg);
     }
-    toast.success("Login successful!");
-    closeModal();
-    dispatch(loginSuccess(user))
-    if(user.name === "Admin")
-    navigate("/Admin") 
-  else
-    navigate("/Tourist")
   };
 
   return (
@@ -79,9 +80,12 @@ export default function LoginModal({ closeModal, onSwitch }) {
 
             <button
               type="submit"
-              className="w-full py-2 rounded-lg bg-[#0A3D62] text-white hover:bg-blue-900 transition"
+              disabled={loading}
+              className={`w-full py-2 rounded-lg bg-[#0A3D62] text-white hover:bg-blue-900 transition ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
 

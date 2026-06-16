@@ -5,8 +5,13 @@ import { toast, ToastContainer } from "react-toastify";
 import Input from "./Input";
 import { registerSchema } from "../components/Utils/Validation";
 import 'react-toastify/dist/ReactToastify.css';
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "./redux/authSlice";
 
 export default function RegisterModal({ onSwitch, closeModal }) {
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.auth);
+
   const {
     register,
     handleSubmit,
@@ -19,11 +24,6 @@ export default function RegisterModal({ onSwitch, closeModal }) {
   });
 
   const password = watch("password");
-  const email = watch("email");
-
-  // Live email uniqueness check
-  const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
-  const emailExists = email && existingUsers.some((user) => user.email === email);
 
   // Password strength logic
   const getStrength = (pwd) => {
@@ -47,15 +47,16 @@ export default function RegisterModal({ onSwitch, closeModal }) {
     "bg-green-500",  // 4
   ][strength] || "bg-gray-300";
 
-  const onSubmit = (data) => {
-    if (emailExists) {
-      toast.error("Email already registered!");
-      return;
+  const onSubmit = async (data) => {
+    try {
+      await dispatch(registerUser(data)).unwrap();
+      toast.success("Registered successfully!");
+      reset();
+      onSwitch();
+    } catch (err) {
+      const errorMsg = err?.message || err?.error || "Registration failed";
+      toast.error(errorMsg);
     }
-    localStorage.setItem("users", JSON.stringify([...existingUsers, data]));
-    reset();
-    onSwitch();
-    toast.success("Registered successfully!");
   };
 
   return (
@@ -91,7 +92,7 @@ export default function RegisterModal({ onSwitch, closeModal }) {
               type="email"
               placeholder="Enter your email"
               {...register("email")}
-              error={errors.email?.message || (emailExists && "Email already registered")}
+              error={errors.email?.message}
             />
 
             <Input
@@ -141,14 +142,14 @@ export default function RegisterModal({ onSwitch, closeModal }) {
 
             <button
               type="submit"
-              disabled={!isValid || emailExists}
+              disabled={!isValid || loading}
               className={`w-full py-2 rounded-lg transition ${
-                isValid && !emailExists
+                isValid && !loading
                   ? "bg-[#0A3D62] text-white hover:bg-blue-900"
                   : "bg-gray-400 text-gray-700 cursor-not-allowed"
               }`}
             >
-              Register
+              {loading ? "Registering..." : "Register"}
             </button>
           </form>
         </motion.div>

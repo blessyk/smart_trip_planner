@@ -1,8 +1,9 @@
 // src/components/Router/Router.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import App from "../../App";
+import { fetchUserProfile } from "../redux/authSlice";
 import AdminHome from "../Admin/AdminHome";
 import UsersView from "../Admin/UsersView";
 import TestimonialsView from "../Admin/TestimonialView";
@@ -17,10 +18,28 @@ import Reviews from "../Tourist/Reviews";
 import Profile from "../Tourist/Profile";
 import DestinationSearch from "../Tourist/DestinationSearch";
 import TripPlanner from "../Tourist/TripPlanner";
+import AdminLogin from "../Admin/AdminLogin";
 
-const PrivateRoute = ({ children }) => {
-  const { isLoggedIn } = useSelector((state) => state.auth);
-  return isLoggedIn ? children : <Navigate to="/" />;
+const PrivateRoute = ({ children, role }) => {
+  const { isLoggedIn, user } = useSelector((state) => state.auth);
+
+  if (isLoggedIn && !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0A3D62]"></div>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return role === "admin" ? <Navigate to="/admin-login" /> : <Navigate to="/" />;
+  }
+
+  if (role && user && user.role !== role) {
+    return role === "admin" ? <Navigate to="/admin-login" /> : <Navigate to="/" />;
+  }
+
+  return children;
 };
 
 // Create routes
@@ -32,7 +51,7 @@ const router = createBrowserRouter([
   {
     path: "/Admin",
     element: (
-      <PrivateRoute>
+      <PrivateRoute role="admin">
         <Layout />
       </PrivateRoute>
     ),
@@ -74,7 +93,7 @@ const router = createBrowserRouter([
   {
     path: "/Tourist",
     element: (
-      <PrivateRoute>
+      <PrivateRoute role="user">
         <TouristLayout />
       </PrivateRoute>
     ),
@@ -105,9 +124,21 @@ const router = createBrowserRouter([
       }
     ],
   },
-
+  {
+    path: "/admin-login",
+    element: <AdminLogin />,
+  },
 ]);
 
 export default function AppRouter() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+      dispatch(fetchUserProfile());
+    }
+  }, [dispatch]);
+
   return <RouterProvider router={router} />;
 }
