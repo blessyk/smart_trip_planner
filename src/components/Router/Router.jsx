@@ -2,6 +2,8 @@
 import React, { useEffect } from "react";
 import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import App from "../../App";
 import { fetchUserProfile } from "../redux/authSlice";
 import AdminHome from "../Admin/AdminHome";
@@ -12,6 +14,7 @@ import Layout from "../Admin/Layout";
 import ContactView from "../Admin/ContactView";
 import ChangePassword from "../Admin/ChangePassword";
 import AddDestination from "../Admin/AddDestination";
+import EditDestination from "../Admin/EditDestination";
 import Dashboard from "../Tourist/Dashboard";
 import TouristLayout from "../Tourist/Layout";
 import Reviews from "../Tourist/Reviews";
@@ -87,6 +90,10 @@ const router = createBrowserRouter([
       {
         path: "add-destination",
         element: <AddDestination />,
+      },
+      {
+        path: "edit-destination/:id",
+        element: <EditDestination />,
       }
     ],
   },
@@ -140,5 +147,10 @@ export default function AppRouter() {
     }
   }, [dispatch]);
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+      <RouterProvider router={router} />
+    </>
+  );
 }

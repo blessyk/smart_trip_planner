@@ -6,7 +6,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import api from "../Utils/api";
 import { toast, ToastContainer } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { FaCloudUploadAlt, FaTrashAlt, FaSpinner } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -33,10 +33,14 @@ const schema = yup.object().shape({
 
 const categories = ["Beach", "Adventure", "Cultural", "Wildlife", "Relaxation"];
 
-export default function AddDestination() {
+export default function EditDestination() {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [images, setImages] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [imageInputMethod, setImageInputMethod] = useState("upload"); // "upload" or "url"
   const [urlInput, setUrlInput] = useState("");
 
@@ -60,6 +64,39 @@ export default function AddDestination() {
   useEffect(() => {
     setValue("images", images, { shouldValidate: true });
   }, [images, setValue]);
+
+  const populateForm = (dest) => {
+    setValue("name", dest.name);
+    setValue("country", dest.country);
+    setValue("category", dest.category);
+    setValue("description", dest.description);
+    setValue("price", dest.price ? dest.price.toLocaleString("en-IN") : "");
+    setValue("duration", dest.duration);
+    setImages(dest.images || []);
+  };
+
+  const fetchDestination = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`/destinations/${id}`);
+      if (response.data?.success) {
+        populateForm(response.data.data.destination);
+      }
+    } catch (err) {
+      console.error("Failed to fetch destination:", err);
+      toast.error("Failed to load destination details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (location.state?.destination) {
+      populateForm(location.state.destination);
+    } else {
+      fetchDestination();
+    }
+  }, [id]);
 
   const handlePriceChange = (e) => {
     const raw = e.target.value.replace(/\D/g, ""); // remove non-digits
@@ -86,7 +123,6 @@ export default function AddDestination() {
     const uploadedUrls = [];
 
     for (const file of files) {
-      // Basic validation
       if (!file.type.startsWith("image/")) {
         toast.error(`${file.name} is not an image file!`);
         continue;
@@ -119,7 +155,6 @@ export default function AddDestination() {
       toast.success("Images uploaded successfully!");
     }
     setUploading(false);
-    // Reset file input value
     e.target.value = "";
   };
 
@@ -142,26 +177,37 @@ export default function AddDestination() {
         images: images,
       };
 
-      const response = await api.post("/destinations", payload);
+      const response = await api.put(`/destinations/${id}`, payload);
 
       if (response.data?.success) {
-        toast.success("Destination created successfully!");
+        toast.success("Destination updated successfully!");
         setTimeout(() => {
           navigate("/Admin/destinations");
         }, 1500);
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to create destination");
+      toast.error(err.response?.data?.message || "Failed to update destination");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <FaSpinner className="text-3xl text-[#0A3D62] animate-spin" />
+          <p className="text-sm font-semibold text-slate-500">Loading destination data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center py-8 px-4">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="w-full max-w-lg bg-white p-6 rounded-xl shadow-md border border-slate-200">
         <h2 className="text-2xl font-bold text-center text-[#0A3D62] mb-6">
-          Add New Destination
+          Edit Destination
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -353,7 +399,7 @@ export default function AddDestination() {
             >
               Cancel
             </button>
-            <Button type="submit">Publish Destination</Button>
+            <Button type="submit">Save Changes</Button>
           </div>
         </form>
       </div>

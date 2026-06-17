@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
+import api from "../Utils/api";
 import {
   FaCalendarAlt, FaMapMarkerAlt, FaStar,
   FaHotel, FaBus, FaUmbrellaBeach,
@@ -24,26 +25,7 @@ const StatCard = ({ title, value, sub, icon, border, iconBg, iconColor, valueCol
   </div>
 );
 
-const destinations = [
-  {
-    name: "Maldives", type: "Tropical paradise", tag: "Beach",
-    tagStyle: "text-teal-700 bg-teal-50 border-teal-200",
-    bg: "bg-gradient-to-br from-sky-400 to-sky-600",
-    icon: <FaUmbrellaBeach className="text-sky-100 text-3xl" />,
-  },
-  {
-    name: "Manali", type: "Snowy mountains", tag: "Mountains",
-    tagStyle: "text-indigo-700 bg-indigo-50 border-indigo-200",
-    bg: "bg-gradient-to-br from-indigo-400 to-indigo-600",
-    icon: <FaMapMarkerAlt className="text-indigo-100 text-3xl" />,
-  },
-  {
-    name: "Dubai", type: "Luxury city life", tag: "City",
-    tagStyle: "text-amber-700 bg-amber-50 border-amber-200",
-    bg: "bg-gradient-to-br from-amber-400 to-amber-600",
-    icon: <FaStar className="text-amber-100 text-3xl" />,
-  },
-];
+
 
 const activities = [
   { label: "Booked hotel in Goa",    time: "2 days ago",  dotBg: "bg-blue-500",   iconBg: "bg-blue-100",  icon: <FaHotel className="text-blue-600 text-xs" /> },
@@ -59,6 +41,33 @@ const budgetItems = [
 
 const Dashboard = () => {
   const { isLoggedIn, user } = useSelector((state) => state.auth);
+  const [destinations, setDestinations] = useState([]);
+
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const response = await api.get("/destinations");
+        if (response.data?.success) {
+          const list = response.data.data.destinations || [];
+          setDestinations(list.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Failed to fetch recommended destinations:", err);
+      }
+    };
+    fetchDestinations();
+  }, []);
+
+  const getTagStyle = (category) => {
+    switch (category) {
+      case "Beach": return "text-teal-700 bg-teal-50 border-teal-200";
+      case "Adventure": return "text-red-700 bg-red-50 border-red-200";
+      case "Cultural": return "text-amber-700 bg-amber-50 border-amber-200";
+      case "Wildlife": return "text-green-700 bg-green-50 border-green-200";
+      default: return "text-indigo-700 bg-indigo-50 border-indigo-200";
+    }
+  };
+
   if (!isLoggedIn) return <Navigate to="/" />;
 
   return (
@@ -104,19 +113,34 @@ const Dashboard = () => {
               <p className="text-slate-800 font-bold text-sm">Recommended Destinations</p>
               <p className="text-slate-400 text-xs">Picked for you</p>
             </div>
-            <button className="bg-blue-50 border border-blue-200 text-blue-600 text-xs rounded-lg px-3 py-1 hover:bg-blue-100 transition-colors">
+            <Link to="/Tourist/DestinationSearch" className="bg-blue-50 border border-blue-200 text-blue-600 text-xs rounded-lg px-3 py-1 hover:bg-blue-100 transition-colors">
               View all
-            </button>
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {destinations.map((d) => (
-              <div key={d.name} className="border border-slate-200 rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-200">
-                <div className={`w-full h-24 ${d.bg} flex items-center justify-center`}>{d.icon}</div>
-                <div className="p-3">
-                  <p className="font-bold text-slate-800 text-sm">{d.name}</p>
-                  <p className="text-slate-500 text-xs mb-2">{d.type}</p>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[10px] border rounded-md px-2 py-0.5 font-medium ${d.tagStyle}`}>{d.tag}</span>
+              <div key={d._id} className="border border-slate-200 rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-200 flex flex-col bg-white">
+                <div className="w-full h-28 bg-slate-200 overflow-hidden relative flex-shrink-0">
+                  <img
+                    src={d.images && d.images[0] ? d.images[0] : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"}
+                    alt={d.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e";
+                    }}
+                  />
+                  <div className="absolute top-2 right-2 bg-black bg-opacity-65 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                    {d.duration}
+                  </div>
+                </div>
+                <div className="p-3 flex flex-col flex-grow">
+                  <p className="font-bold text-slate-800 text-sm truncate">{d.name}</p>
+                  <p className="text-slate-500 text-xs mb-2 truncate">{d.country}</p>
+                  <p className="text-[#0A3D62] font-bold text-xs mb-3">₹{d.price.toLocaleString()}</p>
+                  <div className="flex items-center justify-between mt-auto">
+                    <span className={`text-[10px] border rounded-md px-2 py-0.5 font-medium ${getTagStyle(d.category)}`}>
+                      {d.category}
+                    </span>
                     <button className="bg-blue-50 border border-blue-200 text-blue-600 text-[11px] rounded-lg px-2.5 py-1 hover:bg-blue-100 transition-colors">
                       Explore
                     </button>

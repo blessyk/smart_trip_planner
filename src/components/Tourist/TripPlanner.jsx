@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Input from "../Input";
+import api from "../Utils/api";
 
 const schema = yup.object().shape({
   startDate: yup.date().required("Start date is required"),
@@ -22,6 +23,22 @@ const schema = yup.object().shape({
 
 const TripPlanner = () => {
   const [itinerary, setItinerary] = useState([]);
+  const [dbDestinations, setDbDestinations] = useState([]);
+
+  // Fetch destinations on mount to auto-populate autocomplete datalist
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const response = await api.get("/destinations");
+        if (response.data?.success) {
+          setDbDestinations(response.data.data.destinations || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch destinations for autocomplete:", err);
+      }
+    };
+    fetchDestinations();
+  }, []);
 
   const {
     register,
@@ -39,7 +56,6 @@ const TripPlanner = () => {
     control,
     name: "destinations",
   });
-
 
   const onSubmit = (data) => {
     const start = new Date(data.startDate);
@@ -64,13 +80,19 @@ const TripPlanner = () => {
   };
 
   return (
-    <div className="p-6 grid md:grid-cols-2 gap-6">
+    <div className="p-6 grid md:grid-cols-2 gap-6 bg-slate-50 min-h-screen">
+      {/* Autocomplete Datalist */}
+      <datalist id="db-destinations-list">
+        {dbDestinations.map((dest) => (
+          <option key={dest._id} value={dest.name} />
+        ))}
+      </datalist>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-6 rounded-xl shadow-md"
+        className="bg-white p-6 rounded-xl shadow-md border border-slate-200"
       >
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-bold mb-4 text-slate-800 flex items-center gap-2">
           📅 Trip Planner
         </h2>
 
@@ -90,7 +112,7 @@ const TripPlanner = () => {
 
         {/* 📍 Destinations */}
         <div className="mb-4">
-          <label className="block mb-2 font-medium">
+          <label className="block mb-2 font-medium text-slate-700 text-sm">
             Destinations
           </label>
 
@@ -98,17 +120,20 @@ const TripPlanner = () => {
             <div key={field.id} className="flex gap-2 mb-2">
               <input
                 {...register(`destinations.${index}.name`)}
-                placeholder="Enter destination"
-                className={`w-full px-4 py-2 rounded-lg border ${errors.destinations?.[index]?.name
+                placeholder="Enter destination..."
+                list="db-destinations-list"
+                autoComplete="off"
+                className={`w-full px-4 py-2 rounded-lg border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D62] ${
+                  errors.destinations?.[index]?.name
                     ? "border-red-500"
                     : "border-gray-300"
-                  }`}
+                }`}
               />
 
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="bg-red-500 text-white px-3 rounded"
+                className="bg-red-500 hover:bg-red-600 text-white px-3.5 rounded-lg transition-colors font-semibold"
               >
                 ✕
               </button>
@@ -117,7 +142,7 @@ const TripPlanner = () => {
 
           {/* Error for each destination */}
           {fields.map((_, index) => (
-            <p key={index} className="text-red-500 text-sm">
+            <p key={index} className="text-red-500 text-xs mt-1">
               {errors.destinations?.[index]?.name?.message}
             </p>
           ))}
@@ -125,7 +150,7 @@ const TripPlanner = () => {
           <button
             type="button"
             onClick={() => append({ name: "" })}
-            className="text-blue-600 text-sm mt-2"
+            className="text-[#0A3D62] hover:text-blue-800 text-sm font-semibold mt-2 flex items-center gap-1"
           >
             + Add Destination
           </button>
@@ -133,7 +158,7 @@ const TripPlanner = () => {
 
         <button
           type="submit"
-          className="w-full bg-[#0A3D62] text-white py-2 rounded-lg hover:bg-blue-900"
+          className="w-full bg-[#0A3D62] text-white py-2.5 rounded-lg hover:bg-blue-900 transition-colors font-semibold shadow"
         >
           Generate Itinerary
         </button>
@@ -141,28 +166,30 @@ const TripPlanner = () => {
 
       {/* 📊 OUTPUT */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-bold mb-4 text-slate-800">
           🗺️ Your Itinerary
         </h2>
 
         {itinerary.length === 0 ? (
-          <p className="text-gray-500">
-            No itinerary generated
-          </p>
+          <div className="bg-white p-8 rounded-xl border border-slate-200 text-center shadow-sm text-slate-500 text-sm">
+            No itinerary generated yet. Complete the form to plan your trip!
+          </div>
         ) : (
-          itinerary.map((item, index) => (
-            <div
-              key={index}
-              className="p-4 mb-3 border rounded-lg shadow hover:shadow-md"
-            >
-              <h3 className="font-bold text-lg">
-                Day {item.day}
-              </h3>
-              <p className="text-gray-700">
-                Visit: {item.place}
-              </p>
-            </div>
-          ))
+          <div className="overflow-y-auto max-h-[85vh] pr-2">
+            {itinerary.map((item, index) => (
+              <div
+                key={index}
+                className="p-4 mb-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow transition-shadow duration-200"
+              >
+                <h3 className="font-bold text-[#0A3D62] text-base mb-1">
+                  Day {item.day}
+                </h3>
+                <p className="text-slate-700 text-sm flex items-center gap-1.5 font-medium">
+                  <FaMapMarkerAlt className="text-slate-400 text-xs" /> Visit: {item.place}
+                </p>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

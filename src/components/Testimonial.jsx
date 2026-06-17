@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "./Utils/api";
 
-const testimonials = [
+const fallbackTestimonials = [
   {
     id: 1,
     name: "Mike Taylor",
@@ -33,13 +34,46 @@ const variants = {
 
 export default function Testimonial() {
   const [index, setIndex] = useState(0);
+  const [testimonialsList, setTestimonialsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await api.get("/testimonials");
+        if (response.data?.success) {
+          const list = response.data.data.testimonials || [];
+          setTestimonialsList(list.length > 0 ? list : fallbackTestimonials);
+        } else {
+          setTestimonialsList(fallbackTestimonials);
+        }
+      } catch (err) {
+        console.error("Failed to fetch testimonials:", err);
+        setTestimonialsList(fallbackTestimonials);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
+  useEffect(() => {
+    if (testimonialsList.length === 0) return;
     const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % testimonials.length);
+      setIndex((prev) => (prev + 1) % testimonialsList.length);
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [testimonialsList]);
+
+  if (loading || testimonialsList.length === 0) {
+    return (
+      <div className="relative h-[250px] w-full flex items-center justify-center bg-white rounded-xl shadow-xl border border-slate-200">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0A3D62]"></div>
+      </div>
+    );
+  }
+
+  const current = testimonialsList[index];
 
   return (
     <div className="relative h-[300px] w-full">
@@ -55,16 +89,19 @@ export default function Testimonial() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.6 }}
-          className="absolute w-full bg-white p-8 rounded-xl shadow-xl z-20"
+          className="absolute w-full bg-white p-8 rounded-xl shadow-xl z-20 min-h-[220px]"
         >
           <img
-            src={testimonials[index].image}
-            alt={testimonials[index].name}
-            className="w-14 h-14 rounded-full absolute -top-6 left-6 border-4 border-white"
+            src={current.image || "https://randomuser.me/api/portraits/men/32.jpg"}
+            alt={current.name}
+            className="w-14 h-14 rounded-full absolute -top-6 left-6 border-4 border-white object-cover"
+            onError={(e) => {
+              e.target.src = "https://randomuser.me/api/portraits/men/32.jpg";
+            }}
           />
-          <p className="text-gray-600 mt-6 mb-4">{testimonials[index].text}</p>
-          <h3 className="font-semibold text-[#0A3D62]">{testimonials[index].name}</h3>
-          <p className="text-sm text-gray-500">{testimonials[index].location}</p>
+          <p className="text-gray-600 mt-6 mb-4 line-clamp-4">{current.text}</p>
+          <h3 className="font-semibold text-[#0A3D62]">{current.name}</h3>
+          <p className="text-sm text-gray-500">{current.location}</p>
         </motion.div>
       </AnimatePresence>
     </div>

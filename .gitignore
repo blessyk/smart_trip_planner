@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Plan files
+integration_plan.md
+
+# Mock database JSON collections
+public/API/users.json
+public/API/destinations.json
+public/API/testimonials.json
+public/API/contacts.json
+

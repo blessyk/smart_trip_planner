@@ -43,12 +43,13 @@ const accentMap = {
   },
 };
 
-export default function Card({ title, value, icon, accent = "indigo", trend }) {
+export default function Card({ title, value, icon, accent = "indigo", trend, onClick }) {
   const c = accentMap[accent] || accentMap.indigo;
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border ${c.border} bg-white p-5 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-2xl border ${c.border} bg-white p-5 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md ${onClick ? "cursor-pointer" : ""}`}
     >
       <span className={`absolute -top-5 -right-5 w-20 h-20 rounded-full ${c.orb1} animate-pulse`} aria-hidden="true" />
       <span className={`absolute -bottom-4 -left-4 w-14 h-14 rounded-full ${c.orb2} animate-pulse`} style={{ animationDelay: "0.5s" }} aria-hidden="true" />
