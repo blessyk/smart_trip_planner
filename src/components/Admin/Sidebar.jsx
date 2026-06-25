@@ -1,11 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { FaHome, FaUsers, FaMapMarkedAlt, FaStar, FaEnvelope, FaKey } from "react-icons/fa";
+import { FaHome, FaUsers, FaMapMarkedAlt, FaStar, FaEnvelope, FaKey, FaSuitcase, FaTerminal } from "react-icons/fa";
 
 const menuItems = [
   { name: "Admin Home",            path: "/Admin/adminhome",       icon: <FaHome /> },
   { name: "View Users",            path: "/Admin/users",           icon: <FaUsers /> },
   { name: "View Destinations",     path: "/Admin/destinations",    icon: <FaMapMarkedAlt /> },
+  { name: "View Trips",            path: "/Admin/trips",           icon: <FaSuitcase /> },
+  { name: "AI Call Logs",          path: "/Admin/ai-logs",         icon: <FaTerminal /> },
   { name: "View Testimonials",     path: "/Admin/testimonials",    icon: <FaStar /> },
   { name: "View Contact Messages", path: "/Admin/contact",         icon: <FaEnvelope /> },
   { name: "Change Password",       path: "/Admin/change-password", icon: <FaKey /> },

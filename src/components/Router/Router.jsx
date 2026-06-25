@@ -21,7 +21,12 @@ import Reviews from "../Tourist/Reviews";
 import Profile from "../Tourist/Profile";
 import DestinationSearch from "../Tourist/DestinationSearch";
 import TripPlanner from "../Tourist/TripPlanner";
+import GeneratedTrip from "../Tourist/GeneratedTrip";
+import MyTrips from "../Tourist/MyTrips";
+import AITravelAssistant from "../Tourist/AITravelAssistant";
 import AdminLogin from "../Admin/AdminLogin";
+import AdminTrips from "../Admin/AdminTrips";
+import AiLogsView from "../Admin/AiLogsView";
 
 const PrivateRoute = ({ children, role }) => {
   const { isLoggedIn, user } = useSelector((state) => state.auth);
@@ -94,6 +99,14 @@ const router = createBrowserRouter([
       {
         path: "edit-destination/:id",
         element: <EditDestination />,
+      },
+      {
+        path: "trips",
+        element: <AdminTrips />,
+      },
+      {
+        path: "ai-logs",
+        element: <AiLogsView />,
       }
     ],
   },
@@ -128,6 +141,18 @@ const router = createBrowserRouter([
       {
         path: "TripPlanner",
         element: <TripPlanner />,
+      },
+      {
+        path: "my-trips",
+        element: <MyTrips />,
+      },
+      {
+        path: "generated-trip/:id",
+        element: <GeneratedTrip />,
+      },
+      {
+        path: "chat/:id",
+        element: <AITravelAssistant />,
       }
     ],
   },
