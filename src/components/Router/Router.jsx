@@ -27,6 +27,7 @@ import AITravelAssistant from "../Tourist/AITravelAssistant";
 import AdminLogin from "../Admin/AdminLogin";
 import AdminTrips from "../Admin/AdminTrips";
 import AiLogsView from "../Admin/AiLogsView";
+import AdminReviews from "../Admin/AdminReviews";
 
 const PrivateRoute = ({ children, role }) => {
   const { isLoggedIn, user } = useSelector((state) => state.auth);
@@ -107,6 +108,10 @@ const router = createBrowserRouter([
       {
         path: "ai-logs",
         element: <AiLogsView />,
+      },
+      {
+        path: "reviews",
+        element: <AdminReviews />,
       }
     ],
   },

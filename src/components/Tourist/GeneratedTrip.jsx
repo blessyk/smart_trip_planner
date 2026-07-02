@@ -3,11 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { 
   FaCalendarAlt, FaWallet, FaUsers, FaSuitcase, FaHotel, FaUtensils, 
   FaCloudSun, FaExclamationTriangle, FaMapMarkedAlt, FaCommentDots, 
-  FaCheckCircle, FaChevronDown, FaChevronUp, FaSpinner 
+  FaCheckCircle, FaChevronDown, FaChevronUp, FaSpinner, FaStar
 } from "react-icons/fa";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import api from "../Utils/api";
 import { toast } from "react-toastify";
+import SubmitReviewModal from "./SubmitReviewModal";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -16,6 +17,8 @@ const GeneratedTrip = () => {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedDay, setExpandedDay] = useState(1);
+  const [review, setReview] = useState(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchTripDetails = async () => {
@@ -31,7 +34,20 @@ const GeneratedTrip = () => {
         setLoading(false);
       }
     };
+
+    const fetchReview = async () => {
+      try {
+        const response = await api.get(`/reviews/trip/${id}`);
+        if (response.data?.success && response.data.data) {
+          setReview(response.data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch review status:", err);
+      }
+    };
+
     fetchTripDetails();
+    fetchReview();
   }, [id]);
 
   // Leaflet Map Initialization
@@ -197,6 +213,155 @@ const GeneratedTrip = () => {
             <p className="text-xl font-bold text-slate-800 mt-0.5">{trip.foodPreference}</p>
           </div>
         </div>
+
+        {/* Review Section */}
+        {review ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3 flex-wrap gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  ✍️ Your Trip Feedback
+                </h2>
+                <p className="text-[10px] text-slate-400 mt-0.5">Submitted on {new Date(review.createdAt).toLocaleDateString("en-IN")}</p>
+              </div>
+              <button
+                onClick={() => setReviewModalOpen(true)}
+                className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 text-indigo-700 text-[10px] font-bold rounded-lg transition-colors"
+              >
+                Edit Review
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Destination feedback */}
+              <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-slate-700 text-xs">📍 Destination: {review.destination.name}</span>
+                    <div className="flex gap-0.5">
+                      {[...Array(review.destination.rating)].map((_, i) => (
+                        <FaStar key={i} className="text-amber-400 fill-amber-400 text-[10px]" />
+                      ))}
+                    </div>
+                  </div>
+                  {review.destination.comment ? (
+                    <p className="text-xs text-slate-500 italic">"{review.destination.comment}"</p>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">No destination comments provided.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Hotel feedback */}
+              {review.hotel && review.hotel.name && (
+                <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <div>
+                        <span className="font-semibold text-slate-700 text-xs">🏨 Lodging: {review.hotel.name}</span>
+                        <p className="text-[9px] text-slate-400">{review.hotel.roomType}</p>
+                      </div>
+                      <div className="flex gap-0.5">
+                        {[...Array(review.hotel.rating)].map((_, i) => (
+                          <FaStar key={i} className="text-amber-400 fill-amber-400 text-[10px]" />
+                        ))}
+                      </div>
+                    </div>
+                    {review.hotel.comment ? (
+                      <p className="text-xs text-slate-500 italic">"{review.hotel.comment}"</p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No hotel comments provided.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Room feedback */}
+              {review.room && review.room.name && (
+                <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-slate-700 text-xs">🛏️ Room Stay: {review.room.name}</span>
+                      <div className="flex gap-0.5">
+                        {[...Array(review.room.rating)].map((_, i) => (
+                          <FaStar key={i} className="text-amber-400 fill-amber-400 text-[10px]" />
+                        ))}
+                      </div>
+                    </div>
+                    {review.room.comment ? (
+                      <p className="text-xs text-slate-500 italic">"{review.room.comment}"</p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No room comments provided.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Restaurant feedback */}
+              {review.restaurant && review.restaurant.name && (
+                <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-slate-700 text-xs">🍽️ Dining: {review.restaurant.name}</span>
+                      <div className="flex gap-0.5">
+                        {[...Array(review.restaurant.rating)].map((_, i) => (
+                          <FaStar key={i} className="text-amber-400 fill-amber-400 text-[10px]" />
+                        ))}
+                      </div>
+                    </div>
+                    {review.restaurant.comment ? (
+                      <p className="text-xs text-slate-500 italic">"{review.restaurant.comment}"</p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No restaurant comments provided.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Attraction feedback */}
+              {review.attraction && review.attraction.name && (
+                <div className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100 flex flex-col justify-between">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-semibold text-slate-700 text-xs">🎡 Sights: {review.attraction.name}</span>
+                      <div className="flex gap-0.5">
+                        {[...Array(review.attraction.rating)].map((_, i) => (
+                          <FaStar key={i} className="text-amber-400 fill-amber-400 text-[10px]" />
+                        ))}
+                      </div>
+                    </div>
+                    {review.attraction.comment ? (
+                      <p className="text-xs text-slate-500 italic">"{review.attraction.comment}"</p>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic">No attraction comments provided.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-150 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Finished your trip to {trip.destination}?</h3>
+              <p className="text-slate-500 text-xs mt-1">Rate hotels, dining, attractions, and get instant AI-powered sentiment analysis on your feedback.</p>
+            </div>
+            <button
+              onClick={() => setReviewModalOpen(true)}
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-colors shadow-sm flex-shrink-0 animate-pulse hover:animate-none"
+            >
+              Write a Review
+            </button>
+          </div>
+        )}
+
+        <SubmitReviewModal
+          trip={trip}
+          existingReview={review}
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+          onReviewSubmitted={(newReview) => setReview(newReview)}
+        />
 
         {/* Main Layout Sections */}
         <div className="grid lg:grid-cols-3 gap-6">
