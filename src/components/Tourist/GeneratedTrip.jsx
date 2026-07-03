@@ -12,6 +12,37 @@ import SubmitReviewModal from "./SubmitReviewModal";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
+const cleanQueryName = (name) => {
+  return name
+    .replace(/^(near|around|nearby|close to|visit|explore|lunch at|dinner at|breakfast at|stay at|shopping at|tea at|coffee at)\s+/i, "")
+    .trim();
+};
+
+const getCoordsForName = (name, baseLat, baseLng) => {
+  if (!name) return [baseLat, baseLng];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const latOffset = ((Math.abs(hash) % 100) / 100) * 0.008 - 0.004;
+  const lngOffset = (((Math.abs(hash) >> 8) % 100) / 100) * 0.008 - 0.004;
+  return [baseLat + latOffset, baseLng + lngOffset];
+};
+
+const getHaversineDistance = (coords1, coords2) => {
+  const [lat1, lon1] = coords1;
+  const [lat2, lon2] = coords2;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
 const GeneratedTrip = () => {
   const { id } = useParams();
   const [trip, setTrip] = useState(null);
@@ -19,6 +50,9 @@ const GeneratedTrip = () => {
   const [expandedDay, setExpandedDay] = useState(1);
   const [review, setReview] = useState(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [isMapMaximized, setIsMapMaximized] = useState(false);
+  const [geocodedPoints, setGeocodedPoints] = useState([]);
+  const [resolvingCoords, setResolvingCoords] = useState(false);
 
   useEffect(() => {
     const fetchTripDetails = async () => {
@@ -50,9 +84,99 @@ const GeneratedTrip = () => {
     fetchReview();
   }, [id]);
 
-  // Leaflet Map Initialization
+  // Geocode all places concurrently using database fields or falling back to OSM Nominatim
   useEffect(() => {
     if (!trip || !trip.latitude || !trip.longitude) return;
+
+    const resolveAllCoordinates = async () => {
+      setResolvingCoords(true);
+      
+      const resolvePoint = async (placeName, type, icon, desc, dbLat, dbLng, dayNum = 0, timeVal = "") => {
+        // If exact coordinates were already fetched and saved in database, use them immediately
+        if (typeof dbLat === "number" && typeof dbLng === "number" && dbLat !== 0 && dbLng !== 0) {
+          return { coords: [dbLat, dbLng], name: placeName, type, icon, desc, dayNum, timeVal };
+        }
+
+        let coords = null;
+        try {
+          const cleaned = cleanQueryName(placeName);
+          const query = encodeURIComponent(`${cleaned}, ${trip.destination}`);
+          const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`, {
+            headers: {
+              "User-Agent": "SmartTripPlanner/1.0"
+            }
+          });
+          const data = await response.json();
+          if (data && data.length > 0) {
+            coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          }
+        } catch (e) {
+          console.warn(`OSM Nominatim failed to geocode: ${placeName}. Using offset fallback.`);
+        }
+
+        if (!coords) {
+          coords = getCoordsForName(placeName, trip.latitude, trip.longitude);
+        }
+
+        return { coords, name: placeName, type, icon, desc, dayNum, timeVal };
+      };
+
+      const tasks = [];
+
+      // 1. Hotel task (Base Station)
+      if (trip.recommendedHotels && trip.recommendedHotels[0]) {
+        const hotel = trip.recommendedHotels[0];
+        tasks.push(resolvePoint(
+          hotel.hotelName, 
+          "Hotel", 
+          "🏨", 
+          hotel.location, 
+          undefined, 
+          undefined, 
+          0, 
+          "Base"
+        ));
+      }
+
+      // 2. Loop through all days and schedule items
+      if (trip.itinerary && trip.itinerary.length > 0) {
+        trip.itinerary.forEach((dayPlan) => {
+          if (dayPlan.schedule && dayPlan.schedule.length > 0) {
+            dayPlan.schedule.forEach((item) => {
+              const searchName = item.location || item.activity;
+              if (searchName) {
+                tasks.push(resolvePoint(
+                  searchName, 
+                  `Day ${dayPlan.day}`, 
+                  "📍", 
+                  item.activity,
+                  item.latitude,
+                  item.longitude,
+                  dayPlan.day,
+                  item.time
+                ));
+              }
+            });
+          }
+        });
+      }
+
+      try {
+        const pointsList = await Promise.all(tasks);
+        setGeocodedPoints(pointsList);
+      } catch (err) {
+        console.error("Geocoding task execution error:", err);
+      } finally {
+        setResolvingCoords(false);
+      }
+    };
+
+    resolveAllCoordinates();
+  }, [trip]);
+
+  // Leaflet Map Initialization
+  useEffect(() => {
+    if (!trip || geocodedPoints.length === 0) return;
 
     // Add Leaflet CSS
     if (!document.getElementById("leaflet-css-cdn")) {
@@ -63,48 +187,34 @@ const GeneratedTrip = () => {
       document.head.appendChild(link);
     }
 
-    // Add Leaflet JS
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    script.async = true;
-    script.onload = () => {
+    const scriptId = "leaflet-js-script";
+    let script = document.getElementById(scriptId);
+
+    const initMap = () => {
       const L = window.L;
       if (!L) return;
 
-      const mapContainer = document.getElementById("leaflet-map-div");
+      const containerId = isMapMaximized ? "leaflet-map-fullscreen" : "leaflet-map-div";
+      const mapContainer = document.getElementById(containerId);
       if (!mapContainer) return;
 
-      // Clean up previous map instance if any
-      if (mapContainer._leaflet_id) {
-        mapContainer.innerHTML = "";
-      }
+      // Clean up previous map instances from ALL containers
+      ["leaflet-map-div", "leaflet-map-fullscreen"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && el._leaflet_id) {
+          el.innerHTML = "";
+          delete el._leaflet_id;
+        }
+      });
 
-      const map = L.map("leaflet-map-div").setView([trip.latitude, trip.longitude], 12);
+      const map = L.map(containerId).setView([trip.latitude, trip.longitude], 13);
       
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
       }).addTo(map);
 
-      // Destination Marker
-      L.marker([trip.latitude, trip.longitude])
-        .addTo(map)
-        .bindPopup(`<b>${trip.destination}</b><br/>Coordinates: ${trip.latitude.toFixed(4)}, ${trip.longitude.toFixed(4)}`)
-        .openPopup();
-
-      // Plot nearby markers for discovery
-      const offsets = [
-        { type: "Hospital", lat: 0.015, lon: -0.01, icon: "🏥", desc: "City Central Hospital" },
-        { type: "Railway Station", lat: -0.012, lon: 0.015, icon: "🚉", desc: "Main Railway Junction" },
-        { type: "Bus Station", lat: 0.008, lon: -0.018, icon: "🚌", desc: "Express Bus Terminal" },
-        { type: "Fuel Station", lat: -0.005, lon: -0.008, icon: "⛽", desc: "24/7 Transit Fuel Station" },
-        { type: "Tourist Spot", lat: 0.012, lon: 0.02, icon: "📍", desc: "Scenic Point / Landmark" }
-      ];
-
-      offsets.forEach(pt => {
-        const markerLat = trip.latitude + pt.lat;
-        const markerLon = trip.longitude + pt.lon;
-
-        // Custom div icon for nice visual emojis
+      // Plot all geocoded points
+      geocodedPoints.forEach(pt => {
         const customIcon = L.divIcon({
           html: `<div style="font-size:24px; filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.3))">${pt.icon}</div>`,
           className: "custom-leaflet-emoji-icon",
@@ -112,20 +222,66 @@ const GeneratedTrip = () => {
           iconAnchor: [12, 12]
         });
 
-        L.marker([markerLat, markerLon], { icon: customIcon })
+        L.marker(pt.coords, { icon: customIcon })
           .addTo(map)
-          .bindPopup(`<b>${pt.type}</b><br/>${pt.desc}`);
+          .bindPopup(`<b>${pt.type} ${pt.timeVal && pt.timeVal !== "Base" ? `(${pt.timeVal})` : ""}</b><br/><b>${pt.name}</b><br/>${pt.desc || ''}`);
       });
-    };
 
-    document.body.appendChild(script);
+      // Draw polyline route connecting all locations in sequence
+      if (geocodedPoints.length > 1) {
+        const latlngs = geocodedPoints.map(pt => pt.coords);
+        
+        // Loop back to hotel for full trip circuit
+        latlngs.push(geocodedPoints[0].coords);
 
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
+        const polyline = L.polyline(latlngs, {
+          color: '#2563eb',
+          weight: 4,
+          opacity: 0.85,
+          dashArray: '6, 12'
+        }).addTo(map);
+
+        // Zoom map to fit the route bounds
+        map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+
+        // Calculate and add segments popups/tooltips showing distances
+        for (let i = 0; i < geocodedPoints.length; i++) {
+          const p1 = geocodedPoints[i];
+          const p2 = geocodedPoints[(i + 1) % geocodedPoints.length];
+          const dist = getHaversineDistance(p1.coords, p2.coords);
+          
+          const midLat = (p1.coords[0] + p2.coords[0]) / 2;
+          const midLng = (p1.coords[1] + p2.coords[1]) / 2;
+
+          L.popup({ closeButton: false, autoClose: false, closeOnClick: false })
+            .setLatLng([midLat, midLng])
+            .setContent(`<span style="font-size:10px; font-weight:bold; color:#1d4ed8; background:white; padding:2px 4px; border-radius:4px; border:1px solid #bfdbfe">${dist.toFixed(1)} km</span>`)
+            .addTo(map);
+        }
       }
     };
-  }, [trip]);
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.async = true;
+      script.onload = initMap;
+      document.body.appendChild(script);
+    } else {
+      if (window.L) {
+        initMap();
+      } else {
+        script.addEventListener("load", initMap);
+      }
+    }
+
+    return () => {
+      if (script) {
+        script.removeEventListener("load", initMap);
+      }
+    };
+  }, [trip, geocodedPoints, isMapMaximized]);
 
   if (loading) {
     return (
@@ -476,13 +632,30 @@ const GeneratedTrip = () => {
             
             {/* Interactive Map */}
             <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <FaMapMarkedAlt className="text-blue-500" /> Location Discovery & Nearby
-              </h3>
-              <div 
-                id="leaflet-map-div" 
-                className="w-full h-60 rounded-xl bg-slate-100 border border-slate-150 z-0" 
-              />
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                  <FaMapMarkedAlt className="text-blue-500" /> Route & Location Mapping
+                </h3>
+                <button
+                  onClick={() => setIsMapMaximized(true)}
+                  className="px-2.5 py-1 hover:bg-slate-100 rounded-lg text-slate-650 hover:text-slate-900 text-xs font-bold transition-all border border-slate-200 cursor-pointer flex items-center gap-1"
+                  title="Maximize Map"
+                >
+                  🔍 Maximize
+                </button>
+              </div>
+              <div className="relative w-full h-60 rounded-xl overflow-hidden border border-slate-150">
+                {resolvingCoords && (
+                  <div className="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center gap-2">
+                    <FaSpinner className="animate-spin text-xl text-blue-600" />
+                    <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Geolocating route points...</p>
+                  </div>
+                )}
+                <div 
+                  id="leaflet-map-div" 
+                  className="w-full h-full bg-slate-100 z-0" 
+                />
+              </div>
               <p className="text-[10px] text-slate-400 leading-tight">
                 📍 Displays destination center along with nearby emergency services, transport hubs (hospitals 🏥, trains 🚉, buses 🚌), and local sights.
               </p>
@@ -661,6 +834,41 @@ const GeneratedTrip = () => {
         </div>
 
       </div>
+
+      {/* Fullscreen Map Modal */}
+      {isMapMaximized && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full h-full max-w-5xl max-h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                  🗺️ Itinerary Route & Coordinates Mapper
+                </h3>
+                <p className="text-[11px] text-slate-550">
+                  Real-time geographical distances calculated between your hotel, attractions, and restaurants.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsMapMaximized(false)}
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+              >
+                🗜️ Minimize Map
+              </button>
+            </div>
+            {/* Modal Body (Map Container) */}
+            <div className="flex-1 w-full bg-slate-100 relative">
+              {resolvingCoords && (
+                <div className="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center gap-2">
+                  <FaSpinner className="animate-spin text-2xl text-blue-600" />
+                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Geolocating route points...</p>
+                </div>
+              )}
+              <div id="leaflet-map-fullscreen" className="absolute inset-0 w-full h-full z-0" />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import api from "../Utils/api";
 import { toast } from "react-toastify";
 
 const MyTrips = () => {
+  const [filter, setFilter] = useState("all");
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,6 +46,24 @@ const MyTrips = () => {
     }
   };
 
+  const filteredTrips = React.useMemo(() => {
+    const now = new Date();
+    switch (filter) {
+      case "upcoming":
+        return trips.filter((trip) => new Date(trip.startDate) > now);
+      case "ongoing":
+        return trips.filter((trip) => {
+          const start = new Date(trip.startDate);
+          const end = new Date(trip.endDate);
+          return start <= now && end >= now;
+        });
+      case "past":
+        return trips.filter((trip) => new Date(trip.endDate) < now);
+      default:
+        return trips;
+    }
+  }, [trips, filter]);
+
   if (loading) {
     return (
       <div className="flex h-96 w-full items-center justify-center">
@@ -56,7 +75,7 @@ const MyTrips = () => {
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <header className="mb-8 flex justify-between items-center">
+        <header className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">🧳 My Saved Trips</h1>
             <p className="text-slate-500 text-sm">Review your custom-made AI travel itineraries, chat logs, and budgets.</p>
@@ -69,29 +88,69 @@ const MyTrips = () => {
           </Link>
         </header>
 
-        {trips.length === 0 ? (
+        {/* Filters */}
+        <div className="mb-6 flex gap-2 border-b border-slate-200 pb-3 flex-wrap">
+          {[
+            { id: "all", label: "All Trips" },
+            { id: "upcoming", label: "Upcoming" },
+            { id: "ongoing", label: "Ongoing" },
+            { id: "past", label: "Past / Completed" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                filter === tab.id
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              }`}
+            >
+              {tab.label} ({
+                tab.id === "all" ? trips.length :
+                tab.id === "upcoming" ? trips.filter(t => new Date(t.startDate) > new Date()).length :
+                tab.id === "ongoing" ? trips.filter(t => {
+                  const start = new Date(t.startDate);
+                  const end = new Date(t.endDate);
+                  return start <= new Date() && end >= new Date();
+                }).length :
+                trips.filter(t => new Date(t.endDate) < new Date()).length
+              })
+            </button>
+          ))}
+        </div>
+
+        {filteredTrips.length === 0 ? (
           <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center max-w-lg mx-auto shadow-sm">
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
               🗺️
             </div>
-            <h3 className="text-lg font-bold text-slate-800 mb-1">No trips planned yet</h3>
-            <p className="text-slate-500 text-sm mb-6">Create your first AI-powered travel plan and watch your custom itinerary load in real time!</p>
-            <Link
-              to="/Tourist/TripPlanner"
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm"
-            >
-              Plan a Trip
-            </Link>
+            <h3 className="text-lg font-bold text-slate-800 mb-1">No trips found</h3>
+            <p className="text-slate-500 text-sm mb-6">
+              {filter === "all" 
+                ? "Create your first AI-powered travel plan and watch your custom itinerary load in real time!" 
+                : `No saved itineraries match the "${filter}" filter currently.`}
+            </p>
+            {filter === "all" && (
+              <Link
+                to="/Tourist/TripPlanner"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm"
+              >
+                Plan a Trip
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => {
+            {filteredTrips.map((trip) => {
               const startStr = new Date(trip.startDate).toLocaleDateString("en-IN", {
                 day: "numeric", month: "short", year: "numeric"
               });
               const endStr = new Date(trip.endDate).toLocaleDateString("en-IN", {
                 day: "numeric", month: "short", year: "numeric"
               });
+              
+              const isPast = new Date(trip.endDate) < new Date();
+              const isOngoing = new Date(trip.startDate) <= new Date() && new Date(trip.endDate) >= new Date();
 
               return (
                 <div 
@@ -99,10 +158,19 @@ const MyTrips = () => {
                   className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
                 >
                   {/* Card Header (Gradient block) */}
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
-                    <span className="text-[10px] uppercase font-bold bg-white/20 px-2 py-0.5 rounded-full">
-                      {trip.tripType} Trip
-                    </span>
+                  <div className={`p-4 text-white ${
+                    isPast ? "bg-gradient-to-r from-slate-600 to-slate-700" :
+                    isOngoing ? "bg-gradient-to-r from-emerald-500 to-teal-600" :
+                    "bg-gradient-to-r from-blue-600 to-indigo-600"
+                  }`}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] uppercase font-bold bg-white/20 px-2 py-0.5 rounded-full">
+                        {trip.tripType} Trip
+                      </span>
+                      <span className="text-[10px] uppercase font-bold bg-white/15 px-2 py-0.5 rounded-full border border-white/20">
+                        {isPast ? "Past" : isOngoing ? "Ongoing" : "Upcoming"}
+                      </span>
+                    </div>
                     <h2 className="text-xl font-bold mt-1.5 truncate">{trip.destination}</h2>
                     <p className="text-xs text-blue-100 mt-1 flex items-center gap-1.5 font-medium">
                       <FaCalendarAlt className="text-[10px]" /> {startStr} - {endStr}
@@ -172,7 +240,7 @@ const MyTrips = () => {
 
                     <button
                       onClick={() => handleDeleteTrip(trip._id, trip.destination)}
-                      className="py-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-1 text-[11px] transition-colors"
+                      className="py-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-1 text-[11px] transition-colors cursor-pointer"
                       title="Delete Saved Trip"
                     >
                       <FaTrash /> Delete

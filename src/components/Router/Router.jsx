@@ -9,12 +9,9 @@ import { fetchUserProfile } from "../redux/authSlice";
 import AdminHome from "../Admin/AdminHome";
 import UsersView from "../Admin/UsersView";
 import TestimonialsView from "../Admin/TestimonialView";
-import Destinations from "../Admin/Destinations";
 import Layout from "../Admin/Layout";
 import ContactView from "../Admin/ContactView";
 import ChangePassword from "../Admin/ChangePassword";
-import AddDestination from "../Admin/AddDestination";
-import EditDestination from "../Admin/EditDestination";
 import Dashboard from "../Tourist/Dashboard";
 import TouristLayout from "../Tourist/Layout";
 import Reviews from "../Tourist/Reviews";
@@ -24,6 +21,7 @@ import TripPlanner from "../Tourist/TripPlanner";
 import GeneratedTrip from "../Tourist/GeneratedTrip";
 import MyTrips from "../Tourist/MyTrips";
 import AITravelAssistant from "../Tourist/AITravelAssistant";
+import ImagePrediction from "../Tourist/ImagePrediction";
 import AdminLogin from "../Admin/AdminLogin";
 import AdminTrips from "../Admin/AdminTrips";
 import AiLogsView from "../Admin/AiLogsView";
@@ -86,20 +84,8 @@ const router = createBrowserRouter([
         element: <ContactView />,
       },
       {
-        path: "destinations",
-        element: <Destinations />,
-      },
-      {
         path: "change-password",
         element: <ChangePassword />,
-      },
-      {
-        path: "add-destination",
-        element: <AddDestination />,
-      },
-      {
-        path: "edit-destination/:id",
-        element: <EditDestination />,
       },
       {
         path: "trips",
@@ -154,6 +140,10 @@ const router = createBrowserRouter([
       {
         path: "generated-trip/:id",
         element: <GeneratedTrip />,
+      },
+      {
+        path: "image-prediction",
+        element: <ImagePrediction />,
       },
       {
         path: "chat/:id",

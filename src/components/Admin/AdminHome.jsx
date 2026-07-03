@@ -11,7 +11,7 @@ export default function AdminHome() {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useSelector((state) => state.auth);
   
-  const [metrics, setMetrics] = useState({ users: 0, destinations: 0, testimonials: 0, contacts: 0 });
+  const [metrics, setMetrics] = useState({ users: 0, testimonials: 0, contacts: 0 });
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -71,9 +71,8 @@ export default function AdminHome() {
     const fetchDashboardMetrics = async () => {
       try {
         setLoading(true);
-        const [usersRes, destRes, testRes, contactRes, visitsRes] = await Promise.all([
+        const [usersRes, testRes, contactRes, visitsRes] = await Promise.all([
           api.get("/admin/users?limit=1"),
-          api.get("/destinations?limit=1"),
           api.get("/testimonials"),
           api.get("/contacts"),
           fetch("/API/visits.json").then((r) => r.json()).catch(() => []),
@@ -81,9 +80,6 @@ export default function AdminHome() {
 
         setMetrics({
           users: usersRes.data?.pagination?.total || 0,
-          destinations: destRes.data?.pagination?.total !== undefined 
-            ? destRes.data.pagination.total 
-            : (destRes.data?.data?.destinations?.length || 0),
           testimonials: testRes.data?.data?.testimonials?.length || 0,
           contacts: contactRes.data?.data?.contacts?.length || 0,
         });
@@ -150,11 +146,10 @@ export default function AdminHome() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-            <Card title="Total Users"   value={metrics.users}        icon={<FaUser />}     accent="indigo" trend="Dynamic count" onClick={() => navigate("/Admin/users")} />
-            <Card title="Destinations"  value={metrics.destinations} icon={<FaGlobe />}    accent="teal"   trend="Dynamic count" onClick={() => navigate("/Admin/destinations")} />
-            <Card title="Testimonials"  value={metrics.testimonials} icon={<FaStar />}     accent="amber"  trend="Dynamic count" onClick={() => navigate("/Admin/testimonials")} />
-            <Card title="Contact Msgs"  value={metrics.contacts}     icon={<FaEnvelope />} accent="pink"   trend="Dynamic count" onClick={() => navigate("/Admin/contact")} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <Card title="Total Users"   value={metrics.users}        icon={<FaUser />}     accent="indigo" trend="" onClick={() => navigate("/Admin/users")} />
+            <Card title="Testimonials"  value={metrics.testimonials} icon={<FaStar />}     accent="amber"  trend="" onClick={() => navigate("/Admin/testimonials")} />
+            <Card title="Contact Msgs"  value={metrics.contacts}     icon={<FaEnvelope />} accent="pink"   trend="" onClick={() => navigate("/Admin/contact")} />
           </div>
  
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

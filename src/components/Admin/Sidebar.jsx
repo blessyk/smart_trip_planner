@@ -5,7 +5,6 @@ import { FaHome, FaUsers, FaMapMarkedAlt, FaStar, FaEnvelope, FaKey, FaSuitcase,
 const menuItems = [
   { name: "Admin Home",            path: "/Admin/adminhome",       icon: <FaHome /> },
   { name: "View Users",            path: "/Admin/users",           icon: <FaUsers /> },
-  { name: "View Destinations",     path: "/Admin/destinations",    icon: <FaMapMarkedAlt /> },
   { name: "View Trips",            path: "/Admin/trips",           icon: <FaSuitcase /> },
   { name: "View Reviews",          path: "/Admin/reviews",         icon: <FaCommentDots /> },
   { name: "AI Call Logs",          path: "/Admin/ai-logs",         icon: <FaTerminal /> },

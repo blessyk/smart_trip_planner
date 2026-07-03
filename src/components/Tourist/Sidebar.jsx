@@ -4,13 +4,14 @@ import { useDispatch } from "react-redux";
 import { logout } from "../redux/authSlice";
 import {
   FaThLarge, FaSearch, FaCalendarAlt,
-  FaStar, FaUser, FaSignOutAlt, FaSuitcase,
+  FaStar, FaUser, FaSignOutAlt, FaSuitcase, FaCamera
 } from "react-icons/fa";
 
 const menuItems = [
   { name: "Dashboard",          path: "/Tourist/touristhome",      icon: <FaThLarge /> },
   { name: "Destination Search", path: "/Tourist/DestinationSearch", icon: <FaSearch /> },
   { name: "Trip Planner",       path: "/Tourist/TripPlanner",       icon: <FaCalendarAlt /> },
+  { name: "Image Prediction",   path: "/Tourist/image-prediction",   icon: <FaCamera /> },
   { name: "My Trips",           path: "/Tourist/my-trips",          icon: <FaSuitcase /> },
   { name: "Reviews",            path: "/Tourist/reviews",           icon: <FaStar /> },
   { name: "Profile",            path: "/Tourist/profile",           icon: <FaUser /> },

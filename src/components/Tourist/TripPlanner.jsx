@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -38,6 +38,7 @@ const TripPlanner = () => {
   const [loading, setLoading] = useState(false);
   const [loadingStage, setLoadingStage] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const stages = [
     "Locating destination coordinates...",
@@ -81,6 +82,7 @@ const TripPlanner = () => {
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
+      destination: location.state?.destination || "",
       travelers: 1,
       tripType: "Solo",
       accommodationPreference: "Standard",
