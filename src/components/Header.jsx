@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import slide1 from "../assets/images/slide1.jpeg"
 import slide2 from "../assets/images/slide2.jpg"
 import slide3 from "../assets/images/slide3.jpg"
@@ -73,63 +74,73 @@ export default function Header() {
   }, []);
 
   return (
-    <div className="relative w-full h-[70vh] overflow-hidden">
-      <AnimatePresence custom={direction}>
+    <div className="relative w-full h-[75vh] overflow-hidden bg-slate-100">
+      <AnimatePresence>
         <motion.div
           key={current}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
-          className="absolute w-full h-full">
+          className="absolute inset-0 w-full h-full"
+        >
+          {/* Hardware-Accelerated Ken Burns slide image */}
           <img
             src={slides[current].image}
             alt=""
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover animate-[kenburns_6s_ease-out_forwards]"
           />
-          <div className="absolute inset-0 bg-[#0A3D62]/60 flex flex-col justify-center items-center text-center text-white px-4">
-            <motion.h1
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="text-3xl md:text-5xl font-bold mb-4">
-              {slides[current].title}
-            </motion.h1>
-            <motion.p
-              initial={{ y: 50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-lg md:text-xl max-w-2xl">
-              {slides[current].text}
-            </motion.p>
+
+          {/* Light Theme Glassmorphism Text Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-100/60 via-transparent to-transparent flex flex-col justify-center items-center text-center px-4">
+            <div className="bg-white/80 backdrop-blur-md p-8 md:p-12 rounded-3xl border border-white/40 shadow-2xl max-w-2xl text-slate-800 scale-95 sm:scale-100 transition-all duration-300">
+              <motion.h1
+                initial={{ y: 15, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.15, duration: 0.35 }}
+                className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight leading-tight"
+              >
+                {slides[current].title}
+              </motion.h1>
+              <p className="text-sm md:text-base text-slate-600 font-medium">
+                {slides[current].text}
+              </p>
+            </div>
           </div>
         </motion.div>
       </AnimatePresence>
+
+      <style>{`
+        @keyframes kenburns {
+          0% { transform: scale(1.1); }
+          100% { transform: scale(1.0); }
+        }
+      `}</style>
+
+      {/* Navigation Arrows */}
       <button
         onClick={() => paginate(-1)}
-        className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white/30 hover:bg-white/60 text-white p-3 rounded-full"
+        className="absolute top-1/2 left-5 transform -translate-y-1/2 w-11 h-11 bg-white/70 hover:bg-white text-slate-800 rounded-full flex items-center justify-center shadow-md transition-all text-xs z-10 cursor-pointer hover:scale-105"
       >
-        ❮
+        <FaChevronLeft />
       </button>
       <button
         onClick={() => paginate(1)}
-        className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white/30 hover:bg-white/60 text-white p-3 rounded-full"
+        className="absolute top-1/2 right-5 transform -translate-y-1/2 w-11 h-11 bg-white/70 hover:bg-white text-slate-800 rounded-full flex items-center justify-center shadow-md transition-all text-xs z-10 cursor-pointer hover:scale-105"
       >
-        ❯
+        <FaChevronRight />
       </button>
 
-      {/* Dots */}
-      <div className="absolute bottom-5 w-full flex justify-center gap-3">
+      {/* Slide Indicators (Dots) */}
+      <div className="absolute bottom-6 w-full flex justify-center gap-2.5 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrent([index, index > current ? 1 : -1])}
-            className={`w-3 h-3 rounded-full ${
-              current === index ? "bg-[#F4E1C1]" : "bg-white"
+            className={`h-2.5 rounded-full transition-all duration-300 ${
+              current === index ? "w-6 bg-blue-600 shadow-sm" : "w-2.5 bg-slate-300 hover:bg-slate-400"
             }`}
-          ></button>
+          />
         ))}
       </div>
     </div>

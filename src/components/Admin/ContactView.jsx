@@ -63,23 +63,23 @@ export default function ContactView() {
   const actions = [
     {
       label: "View",
-      className: "bg-green-500 text-white hover:bg-green-600",
-      onClick: (contact) => {
-        setSelectedContact(contact);
-        setIsModalOpen(true);
-      },
+      className: "bg-emerald-950/60 text-emerald-400 border border-emerald-800/60 hover:bg-emerald-900/60",
+      onClick: (contact) => { setSelectedContact(contact); setIsModalOpen(true); },
     },
     {
       label: "Delete",
-      className: "bg-red-500 text-white hover:bg-red-600",
+      className: "bg-red-950/60 text-red-400 border border-red-800/60 hover:bg-red-900/60",
       onClick: handleDelete,
     },
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-slate-950 min-h-screen">
+      <div className="mb-5">
+        <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">Contact Messages</h1>
+        <p className="text-slate-500 text-sm mt-1">Review and manage incoming contact form submissions</p>
+      </div>
       <ToastContainer position="top-right" autoClose={3000} />
-      {/* Top Bar */}
       <div className="w-full mb-4">
         <Search
           searchTerm={searchTerm}

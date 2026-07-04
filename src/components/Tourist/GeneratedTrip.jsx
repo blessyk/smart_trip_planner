@@ -213,8 +213,14 @@ const GeneratedTrip = () => {
         attribution: '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
       }).addTo(map);
 
-      // Plot all geocoded points
-      geocodedPoints.forEach(pt => {
+      // Filter points to show only the Hotel and the selected day's activities
+      const dayPoints = geocodedPoints.filter(pt => {
+        if (pt.dayNum === 0) return true; // Always include hotel
+        return pt.dayNum === expandedDay; // Include only current selected day
+      });
+
+      // Plot day-specific geocoded points
+      dayPoints.forEach(pt => {
         const customIcon = L.divIcon({
           html: `<div style="font-size:24px; filter:drop-shadow(0px 2px 4px rgba(0,0,0,0.3))">${pt.icon}</div>`,
           className: "custom-leaflet-emoji-icon",
@@ -227,37 +233,77 @@ const GeneratedTrip = () => {
           .bindPopup(`<b>${pt.type} ${pt.timeVal && pt.timeVal !== "Base" ? `(${pt.timeVal})` : ""}</b><br/><b>${pt.name}</b><br/>${pt.desc || ''}`);
       });
 
-      // Draw polyline route connecting all locations in sequence
-      if (geocodedPoints.length > 1) {
-        const latlngs = geocodedPoints.map(pt => pt.coords);
+      // Draw polyline route connecting day sequence in order
+      if (dayPoints.length > 1) {
+        const latlngs = dayPoints.map(pt => pt.coords);
         
-        // Loop back to hotel for full trip circuit
-        latlngs.push(geocodedPoints[0].coords);
+        // Loop back to hotel for full daily circuit
+        latlngs.push(dayPoints[0].coords);
 
-        const polyline = L.polyline(latlngs, {
-          color: '#2563eb',
-          weight: 4,
-          opacity: 0.85,
-          dashArray: '6, 12'
-        }).addTo(map);
+        const coordString = dayPoints.map(pt => `${pt.coords[1]},${pt.coords[0]}`).join(";");
+        const fullCoordString = `${coordString};${dayPoints[0].coords[1]},${dayPoints[0].coords[0]}`;
 
-        // Zoom map to fit the route bounds
-        map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+        fetch(`https://router.project-osrm.org/route/v1/driving/${fullCoordString}?overview=full&geometries=geojson`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.code === "Ok" && data.routes && data.routes[0]) {
+              const route = data.routes[0];
+              const roadLatLngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
 
-        // Calculate and add segments popups/tooltips showing distances
-        for (let i = 0; i < geocodedPoints.length; i++) {
-          const p1 = geocodedPoints[i];
-          const p2 = geocodedPoints[(i + 1) % geocodedPoints.length];
-          const dist = getHaversineDistance(p1.coords, p2.coords);
-          
-          const midLat = (p1.coords[0] + p2.coords[0]) / 2;
-          const midLng = (p1.coords[1] + p2.coords[1]) / 2;
+              const polyline = L.polyline(roadLatLngs, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.85
+              }).addTo(map);
 
-          L.popup({ closeButton: false, autoClose: false, closeOnClick: false })
-            .setLatLng([midLat, midLng])
-            .setContent(`<span style="font-size:10px; font-weight:bold; color:#1d4ed8; background:white; padding:2px 4px; border-radius:4px; border:1px solid #bfdbfe">${dist.toFixed(1)} km</span>`)
-            .addTo(map);
-        }
+              map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+
+              for (let i = 0; i < dayPoints.length; i++) {
+                const p1 = dayPoints[i];
+                const p2 = dayPoints[(i + 1) % dayPoints.length];
+                const legDistance = route.legs && route.legs[i] ? route.legs[i].distance / 1000 : getHaversineDistance(p1.coords, p2.coords);
+
+                const midLat = (p1.coords[0] + p2.coords[0]) / 2;
+                const midLng = (p1.coords[1] + p2.coords[1]) / 2;
+
+                L.popup({ closeButton: false, autoClose: false, closeOnClick: false })
+                  .setLatLng([midLat, midLng])
+                  .setContent(`<span style="font-size:10px; font-weight:bold; color:#1d4ed8; background:white; padding:3px 6px; border-radius:6px; border:1px solid #bfdbfe; box-shadow: 0 1px 3px rgba(0,0,0,0.1)">To ${p2.name}: ${legDistance.toFixed(1)} km</span>`)
+                  .addTo(map);
+              }
+            } else {
+              drawFallbackStraightLines();
+            }
+          })
+          .catch(err => {
+            console.error("OSRM road routing failed, drawing straight line fallbacks:", err);
+            drawFallbackStraightLines();
+          });
+
+        const drawFallbackStraightLines = () => {
+          const polyline = L.polyline(latlngs, {
+            color: '#2563eb',
+            weight: 4,
+            opacity: 0.85,
+            dashArray: '6, 12'
+          }).addTo(map);
+
+          map.fitBounds(polyline.getBounds(), { padding: [30, 30] });
+
+          for (let i = 0; i < dayPoints.length; i++) {
+            const p1 = dayPoints[i];
+            const p2 = dayPoints[(i + 1) % dayPoints.length];
+            const dist = getHaversineDistance(p1.coords, p2.coords);
+            
+            const midLat = (p1.coords[0] + p2.coords[0]) / 2;
+            const midLng = (p1.coords[1] + p2.coords[1]) / 2;
+
+            L.popup({ closeButton: false, autoClose: false, closeOnClick: false })
+              .setLatLng([midLat, midLng])
+              .setContent(`<span style="font-size:10px; font-weight:bold; color:#1d4ed8; background:white; padding:3px 6px; border-radius:6px; border:1px solid #bfdbfe; box-shadow: 0 1px 3px rgba(0,0,0,0.1)">To ${p2.name}: ${dist.toFixed(1)} km (straight)</span>`)
+              .addTo(map);
+          }
+        };
       }
     };
 
@@ -281,7 +327,7 @@ const GeneratedTrip = () => {
         script.removeEventListener("load", initMap);
       }
     };
-  }, [trip, geocodedPoints, isMapMaximized]);
+  }, [trip, geocodedPoints, isMapMaximized, expandedDay]);
 
   if (loading) {
     return (
@@ -837,35 +883,34 @@ const GeneratedTrip = () => {
 
       {/* Fullscreen Map Modal */}
       {isMapMaximized && (
-        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full h-full max-w-5xl max-h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                  🗺️ Itinerary Route & Coordinates Mapper
-                </h3>
-                <p className="text-[11px] text-slate-550">
-                  Real-time geographical distances calculated between your hotel, attractions, and restaurants.
-                </p>
+        <div className="fixed inset-0 z-50 bg-black animate-in fade-in duration-150">
+          {/* Floating Close/Minimize Button */}
+          <button
+            onClick={() => setIsMapMaximized(false)}
+            className="absolute top-5 right-5 z-[1000] px-4 py-2.5 bg-slate-900/80 hover:bg-slate-950 text-white rounded-full text-xs font-bold transition-all shadow-lg flex items-center gap-2 border border-slate-800 cursor-pointer backdrop-blur-md"
+          >
+            🗜️ Minimize Map
+          </button>
+
+          {/* Floating Route Title Info Panel */}
+          <div className="absolute top-5 left-5 z-[1000] bg-slate-900/80 text-white p-4 rounded-2xl max-w-sm border border-slate-800 shadow-xl backdrop-blur-md">
+            <h3 className="font-bold text-xs flex items-center gap-2">
+              🗺️ Itinerary Route Mapper
+            </h3>
+            <p className="text-[10px] text-slate-350 mt-1 leading-relaxed">
+              Street-level route & driving distances resolved for {trip.destination}.
+            </p>
+          </div>
+
+          {/* Full-Screen Map Container */}
+          <div className="w-full h-full relative">
+            {resolvingCoords && (
+              <div className="absolute inset-0 bg-white/90 z-[1001] flex flex-col items-center justify-center gap-2">
+                <FaSpinner className="animate-spin text-2xl text-blue-600" />
+                <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Geolocating route points...</p>
               </div>
-              <button
-                onClick={() => setIsMapMaximized(false)}
-                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-              >
-                🗜️ Minimize Map
-              </button>
-            </div>
-            {/* Modal Body (Map Container) */}
-            <div className="flex-1 w-full bg-slate-100 relative">
-              {resolvingCoords && (
-                <div className="absolute inset-0 bg-white/90 z-10 flex flex-col items-center justify-center gap-2">
-                  <FaSpinner className="animate-spin text-2xl text-blue-600" />
-                  <p className="text-xs text-slate-450 font-bold uppercase tracking-wider">Geolocating route points...</p>
-                </div>
-              )}
-              <div id="leaflet-map-fullscreen" className="absolute inset-0 w-full h-full z-0" />
-            </div>
+            )}
+            <div id="leaflet-map-fullscreen" className="w-full h-full z-0" />
           </div>
         </div>
       )}

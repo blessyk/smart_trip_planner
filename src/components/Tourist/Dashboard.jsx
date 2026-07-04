@@ -7,19 +7,19 @@ import {
   FaHotel, FaBus, FaUmbrellaBeach, FaCompass
 } from "react-icons/fa";
 
-const StatCard = ({ title, value, sub, icon, border, iconBg, iconColor, valueColor, subColor, orbBg, onClick }) => (
+const StatCard = ({ title, value, sub, icon, gradient, onClick }) => (
   <div 
     onClick={onClick}
-    className={`bg-white border ${border} rounded-2xl p-5 relative overflow-hidden hover:-translate-y-1 transition-transform duration-200 cursor-pointer shadow-xs`}
+    className="bg-white border border-slate-150/60 rounded-2xl p-6 relative overflow-hidden hover:-translate-y-1.5 hover:shadow-md transition-all duration-300 cursor-pointer shadow-xs"
   >
-    <span className={`absolute -top-4 -right-4 w-16 h-16 rounded-full ${orbBg} animate-pulse`} />
+    <span className={`absolute -top-6 -right-6 w-24 h-24 rounded-full bg-gradient-to-br ${gradient} opacity-[0.06] animate-pulse`} />
     <div className="relative flex justify-between items-start">
       <div>
-        <p className={`text-[10.5px] font-semibold uppercase tracking-widest mb-2 ${iconColor}`}>{title}</p>
-        <p className={`text-3xl font-bold ${valueColor}`}>{value}</p>
-        <p className={`text-xs mt-1 ${subColor}`}>{sub}</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{title}</p>
+        <p className="text-3xl font-extrabold text-slate-800 leading-tight">{value}</p>
+        <p className="text-xs mt-1.5 font-medium text-slate-400">{sub}</p>
       </div>
-      <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center text-xl ${iconColor} flex-shrink-0`}
+      <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center text-lg text-white shadow-sm flex-shrink-0`}
         style={{ animation: "float 3s ease-in-out infinite" }}>
         {icon}
       </div>
@@ -236,7 +236,7 @@ const Dashboard = () => {
   };
 
   return (
-    <main className="p-5 bg-slate-50 min-h-screen overflow-y-auto">
+    <main className="p-6 bg-gradient-to-tr from-slate-50 via-slate-100 to-indigo-50/20 min-h-screen overflow-y-auto">
       {loading ? (
         <div className="flex h-60 w-full items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -244,18 +244,13 @@ const Dashboard = () => {
       ) : (
         <>
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
             <StatCard 
               title="Trips Planned"   
               value={totalPlanned} 
               sub={`${totalPlanned} total itineraries`}       
               icon={<FaCalendarAlt />}  
-              border="border-blue-200"   
-              iconBg="bg-blue-100"   
-              iconColor="text-blue-600"   
-              valueColor="text-blue-950"   
-              subColor="text-blue-400 font-semibold"   
-              orbBg="bg-blue-50" 
+              gradient="from-blue-500 to-indigo-600"
               onClick={() => navigate("/Tourist/my-trips")}
             />
             <StatCard 
@@ -263,12 +258,7 @@ const Dashboard = () => {
               value={upcomingCount}  
               sub={nextTrip ? `Next: ${nextTrip.destination}` : "No upcoming trips"} 
               icon={<FaMapMarkerAlt />} 
-              border="border-teal-200"   
-              iconBg="bg-teal-100"   
-              iconColor="text-teal-600"   
-              valueColor="text-teal-950"   
-              subColor="text-teal-400 font-semibold"   
-              orbBg="bg-teal-50" 
+              gradient="from-teal-400 to-emerald-600"
               onClick={() => navigate("/Tourist/my-trips")}
             />
             <StatCard 
@@ -276,72 +266,69 @@ const Dashboard = () => {
               value={placesVisitedCount} 
               sub={`${placesVisitedCount} unique destinations`}     
               icon={<FaStar />}         
-              border="border-amber-200"  
-              iconBg="bg-amber-100"  
-              iconColor="text-amber-500"  
-              valueColor="text-amber-950"  
-              subColor="text-amber-400 font-semibold"  
-              orbBg="bg-amber-50" 
+              gradient="from-amber-400 to-orange-500"
               onClick={() => navigate("/Tourist/my-trips")}
             />
           </div>
 
           {/* Upcoming Trip Banner */}
           {displayTrip ? (
-            <div className="bg-white border border-blue-200 rounded-2xl px-5 py-4 mb-5 flex items-center justify-between gap-3 shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <FaMapMarkerAlt className="text-blue-600 text-lg" />
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md text-white relative overflow-hidden">
+              <span className="absolute -top-12 -left-12 w-40 h-40 rounded-full bg-white/5" />
+              <span className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full bg-white/5" />
+              <div className="flex items-center gap-4 relative">
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0 backdrop-blur-md">
+                  <FaMapMarkerAlt className="text-white text-xl" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-widest mb-1">
-                    {activeTrip ? "📍 Ongoing Trip" : "✈️ Upcoming Trip"}
+                  <p className="text-[10px] text-blue-200 font-bold uppercase tracking-widest mb-1.5">
+                    {activeTrip ? "📍 Active & Ongoing" : "✈️ Up Next on Your Horizon"}
                   </p>
-                  <h3 className="text-slate-800 font-bold text-base">{displayTrip.destination}</h3>
-                  <p className="text-slate-500 text-xs">
+                  <h3 className="text-white font-extrabold text-xl leading-tight">{displayTrip.destination}</h3>
+                  <p className="text-blue-100 text-xs mt-1">
                     {new Date(displayTrip.startDate).toLocaleDateString("en-IN")} — {new Date(displayTrip.endDate).toLocaleDateString("en-IN")} &nbsp;·&nbsp; {getNights(displayTrip.startDate, displayTrip.endDate)}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
+              <div className="flex items-center gap-4 flex-shrink-0 w-full md:w-auto justify-between md:justify-end relative">
                 {!activeTrip && (
-                  <div className="text-right hidden sm:block">
-                    <p className="text-xs text-slate-400">Countdown</p>
-                    <p className="text-base font-bold text-blue-600">
+                  <div className="text-left md:text-right">
+                    <p className="text-[10px] text-blue-200 uppercase tracking-wider font-semibold">Days to Departure</p>
+                    <p className="text-base font-extrabold text-white">
                       {getCountdownDays(displayTrip.startDate)}
                     </p>
                   </div>
                 )}
                 {activeTrip && (
-                  <div className="text-right hidden sm:block">
-                    <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-lg text-[10px]">
-                      Live Now
+                  <div className="text-left md:text-right">
+                    <span className="px-2.5 py-1 bg-emerald-500/25 text-emerald-100 border border-emerald-500/30 font-bold rounded-lg text-[10px] backdrop-blur-xs uppercase tracking-wider">
+                      Live Trip
                     </span>
                   </div>
                 )}
                 <button 
                   onClick={() => navigate(`/Tourist/generated-trip/${displayTrip._id}`)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
+                  className="bg-white hover:bg-blue-50 text-blue-600 text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
-                  View Details
+                  View Itinerary →
                 </button>
               </div>
             </div>
           ) : (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-150 rounded-2xl px-5 py-4 mb-5 flex items-center justify-between gap-3 shadow-sm animate-pulse">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50/30 border border-blue-150/60 rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <FaCompass className="text-blue-600 text-lg" />
+                <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 shadow-xs">
+                  <FaCompass className="text-blue-600 text-xl" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-blue-600 font-semibold uppercase tracking-widest mb-1">Explore</p>
-                  <h3 className="text-slate-800 font-bold text-sm sm:text-base">Ready to explore the world?</h3>
-                  <p className="text-slate-500 text-xs">Create your next customized, AI-powered travel itinerary in seconds.</p>
+                  <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-1">Explore</p>
+                  <h3 className="text-slate-800 font-extrabold text-lg">Ready to explore the world?</h3>
+                  <p className="text-slate-500 text-xs mt-0.5">Create your next customized, AI-powered travel itinerary in seconds.</p>
                 </div>
               </div>
               <button 
                 onClick={() => navigate("/Tourist/TripPlanner")}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors flex-shrink-0 cursor-pointer"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-750 hover:to-indigo-750 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md transition-all flex-shrink-0 cursor-pointer"
               >
                 Plan a New Trip
               </button>

@@ -1,40 +1,41 @@
-import React from "react";
-import Button from "../Button";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pageNumbers.push(i);
-  }
+  if (totalPages <= 1) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
-    <div className="flex justify-end items-center gap-2 mt-4">
-      <Button
+    <div className="flex justify-end items-center gap-1.5 mt-4">
+      <button
         onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-        className="bg-gray-300 text-black hover:bg-gray-400">
-        Prev
-      </Button>
+        disabled={currentPage === 1}
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition text-xs"
+      >
+        <FaChevronLeft />
+      </button>
 
-      {pageNumbers.map((num) => (
-        <Button
+      {pages.map((num) => (
+        <button
           key={num}
           onClick={() => onPageChange(num)}
-          className={`${
+          className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs font-bold transition ${
             num === currentPage
-              ? "bg-[#1E3A8A] text-white"
-              : "bg-gray-300 text-black hover:bg-gray-400"
+              ? "bg-rose-600 border-rose-500 text-white shadow-sm shadow-rose-900/50"
+              : "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-100"
           }`}
         >
           {num}
-        </Button>
+        </button>
       ))}
 
-      <Button
+      <button
         onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-        className="bg-gray-300 text-black hover:bg-gray-400"
+        disabled={currentPage === totalPages}
+        className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition text-xs"
       >
-        Next
-      </Button>
+        <FaChevronRight />
+      </button>
     </div>
   );
 }

@@ -124,18 +124,18 @@ const TripPlanner = () => {
   };
 
   return (
-    <div className="relative p-6 bg-slate-50 min-h-screen">
+    <div className="relative p-6 bg-gradient-to-tr from-slate-50 via-slate-100 to-indigo-50/20 min-h-screen">
       {loading && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white">
-          <div className="bg-white/10 p-8 rounded-2xl border border-white/20 shadow-2xl flex flex-col items-center max-w-md w-full mx-4 text-center">
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex flex-col items-center justify-center text-white">
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-8 rounded-2xl border border-slate-800 shadow-2xl flex flex-col items-center max-w-md w-full mx-4 text-center">
             <FaSpinner className="animate-spin text-5xl text-blue-400 mb-4" />
-            <h3 className="text-xl font-bold mb-2">Creating Your Trip</h3>
+            <h3 className="text-xl font-extrabold mb-2">Creating Your Trip</h3>
             <p className="text-blue-200 text-sm animate-pulse h-12 flex items-center justify-center font-medium">
               {stages[loadingStage]}
             </p>
-            <div className="w-full bg-white/20 h-1.5 rounded-full mt-4 overflow-hidden">
+            <div className="w-full bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
               <div 
-                className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500"
                 style={{ width: `${((loadingStage + 1) / stages.length) * 100}%` }}
               />
             </div>
@@ -152,15 +152,15 @@ const TripPlanner = () => {
 
       <div className="max-w-4xl mx-auto">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
             🌍 AI Smart Trip Planner
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 text-sm mt-0.5">
             Enter your destination and travel details. Our AI travel architect will craft a customized, weather-aware, budget-optimized travel package.
           </p>
         </header>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-md border border-slate-150/60 p-6 md:p-8 space-y-6 hover:shadow-lg transition-all duration-300">
           
           <div className="grid md:grid-cols-2 gap-6">
             {/* Destination */}
@@ -345,7 +345,7 @@ const TripPlanner = () => {
                     onClick={() => handleInterestToggle(interest)}
                     className={`px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all duration-150 border ${
                       selected
-                        ? "bg-blue-50 border-blue-300 text-blue-700 shadow-sm"
+                        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-300 text-blue-700 shadow-xs font-bold"
                         : "bg-white border-slate-200 text-slate-600 hover:border-slate-350 hover:bg-slate-50"
                     }`}
                   >
@@ -371,7 +371,7 @@ const TripPlanner = () => {
 
           <button
             type="submit"
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-bold shadow-md shadow-blue-200 flex items-center justify-center gap-2 text-sm"
+            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-750 hover:to-indigo-750 text-white rounded-xl transition-all font-bold shadow-md shadow-blue-100 flex items-center justify-center gap-2 text-sm cursor-pointer"
           >
             Create My AI Itinerary
           </button>

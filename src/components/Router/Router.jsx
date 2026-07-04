@@ -26,13 +26,14 @@ import AdminLogin from "../Admin/AdminLogin";
 import AdminTrips from "../Admin/AdminTrips";
 import AiLogsView from "../Admin/AiLogsView";
 import AdminReviews from "../Admin/AdminReviews";
+import Settings from "../Admin/Settings";
 
 const PrivateRoute = ({ children, role }) => {
   const { isLoggedIn, user } = useSelector((state) => state.auth);
 
   if (isLoggedIn && !user) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-gray-100">
+      <div className="flex h-screen w-full items-center justify-center bg-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0A3D62]"></div>
       </div>
     );
@@ -98,7 +99,11 @@ const router = createBrowserRouter([
       {
         path: "reviews",
         element: <AdminReviews />,
-      }
+      },
+      {
+        path: "settings",
+        element: <Settings />,
+      },
     ],
   },
   {

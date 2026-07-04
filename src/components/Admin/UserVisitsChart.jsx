@@ -14,11 +14,11 @@ import {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-gray-100 rounded-xl px-3 py-2 shadow-lg text-xs font-['Plus_Jakarta_Sans',sans-serif]">
-      <p className="font-700 text-[#0A2540] mb-1">{label}</p>
+    <div className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 shadow-xl text-xs font-['Plus_Jakarta_Sans',sans-serif] text-slate-100">
+      <p className="font-bold text-slate-200 mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-semibold">
-          {p.name}: <span className="font-bold">{p.value?.toLocaleString()}</span>
+          {p.name}: <span className="font-bold text-slate-100">{p.value?.toLocaleString()}</span>
         </p>
       ))}
     </div>
@@ -95,21 +95,21 @@ export default function UserVisitsChart({ data = [] }) {
               className="inline-block w-2 h-2 rounded-full bg-[#00C896]"
               style={{ animation: "uvc-pulse 2s infinite" }}
             />
-            <span className="text-sm font-bold text-[#0A2540]">User Visits</span>
+            <span className="text-sm font-bold text-slate-100">User Visits</span>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">Visitor analytics overview</p>
+          <p className="text-xs text-gray-450 mt-0.5">Visitor analytics overview</p>
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        <div className="flex gap-1 bg-slate-950/60 border border-slate-800/80 rounded-xl p-1">
           {tabs.map((t) => (
             <button
               key={t}
               onClick={() => setFilter(t)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold capitalize transition-all duration-200
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold capitalize transition-all duration-200
                 ${filter === t
-                  ? "bg-white text-[#0A2540] shadow-sm"
-                  : "text-gray-400 hover:text-gray-600"
+                  ? "bg-slate-800 text-white shadow-sm border border-slate-700/40"
+                  : "text-slate-400 hover:text-slate-200"
                 }`}
             >
               {t === "all" ? "All Time" : t.charAt(0).toUpperCase() + t.slice(1)}
@@ -121,12 +121,12 @@ export default function UserVisitsChart({ data = [] }) {
       {/* ── Summary chips ── */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
-          { label: "Total Visits",    value: totalVisits.toLocaleString(),    color: "bg-[#ecfdf5] text-[#059669]" },
-          { label: "Returning",       value: totalReturning.toLocaleString(), color: "bg-[#f0f9ff] text-[#0ea5c9]" },
-          { label: "Daily Avg",       value: avgVisits.toLocaleString(),      color: "bg-[#f5f3ff] text-[#7c3aed]" },
+          { label: "Total Visits",    value: totalVisits.toLocaleString(),    color: "bg-emerald-950/30 border border-emerald-900/40 text-emerald-400" },
+          { label: "Returning",       value: totalReturning.toLocaleString(), color: "bg-cyan-950/30 border border-cyan-900/40 text-cyan-400" },
+          { label: "Daily Avg",       value: avgVisits.toLocaleString(),      color: "bg-purple-950/30 border border-purple-900/40 text-purple-400" },
         ].map((s) => (
-          <div key={s.label} className={`rounded-xl px-3 py-2.5 ${s.color}`}>
-            <p className="text-[10px] font-600 opacity-70 uppercase tracking-wide">{s.label}</p>
+          <div key={s.label} className={`rounded-xl px-3 py-2.5 border ${s.color}`}>
+            <p className="text-[10px] font-bold opacity-80 uppercase tracking-wide">{s.label}</p>
             <p className="text-base font-extrabold mt-0.5">{s.value}</p>
           </div>
         ))}
@@ -143,23 +143,23 @@ export default function UserVisitsChart({ data = [] }) {
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#f0f4f8"
+            stroke="#1e293b"
             vertical={false}
           />
           <XAxis
             dataKey="date"
-            tick={{ fontSize: 10, fill: "#8899aa", fontWeight: 500 }}
+            tick={{ fontSize: 8, fill: "#94a3b8", fontWeight: 500 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#8899aa" }}
+            tick={{ fontSize: 8, fill: "#94a3b8" }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip
             content={<CustomTooltip />}
-            cursor={{ fill: "rgba(240,244,248,0.6)", radius: 8 }}
+            cursor={{ fill: "rgba(30,41,59,0.3)", radius: 8 }}
           />
 
           {/* Returning visitors bar */}
@@ -174,7 +174,7 @@ export default function UserVisitsChart({ data = [] }) {
             {filteredData.map((entry, i) => (
               <Cell
                 key={i}
-                fill={activeBar === i ? "#b3e8d8" : "#d1f5eb"}
+                fill={activeBar === i ? "#0284c7" : "#38bdf8"}
                 onMouseEnter={() => setActiveBar(i)}
               />
             ))}
@@ -193,7 +193,7 @@ export default function UserVisitsChart({ data = [] }) {
             {filteredData.map((entry, i) => (
               <Cell
                 key={i}
-                fill={activeBar === i ? "#00b584" : "#00C896"}
+                fill={activeBar === i ? "#059669" : "#10b981"}
                 onMouseEnter={() => setActiveBar(i)}
               />
             ))}
@@ -205,18 +205,18 @@ export default function UserVisitsChart({ data = [] }) {
       <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#00C896]" />
+            <div className="w-3 h-3 rounded bg-[#10b981]" />
             <span className="text-[11px] text-gray-400 font-medium">New Visitors</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-[#d1f5eb]" />
+            <div className="w-3 h-3 rounded bg-[#38bdf8]" />
             <span className="text-[11px] text-gray-400 font-medium">Returning</span>
           </div>
         </div>
         {peak.date && (
           <div className="text-[11px] text-gray-400">
-            Peak: <span className="font-bold text-[#0A2540]">{peak.date}</span>
-            <span className="ml-1 text-[#00C896] font-bold">
+            Peak: <span className="font-bold text-slate-100">{peak.date}</span>
+            <span className="ml-1 text-[#10b981] font-bold">
               {peak.visits?.toLocaleString()} visits
             </span>
           </div>

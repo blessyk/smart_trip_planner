@@ -73,23 +73,25 @@ const MyTrips = () => {
   }
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen">
+    <div className="p-6 bg-gradient-to-tr from-slate-50 via-slate-100 to-indigo-50/20 min-h-screen">
       <div className="max-w-5xl mx-auto">
         <header className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">🧳 My Saved Trips</h1>
-            <p className="text-slate-500 text-sm">Review your custom-made AI travel itineraries, chat logs, and budgets.</p>
+            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+              🧳 My Saved Trips
+            </h1>
+            <p className="text-slate-500 text-sm mt-0.5">Review your custom-made AI travel itineraries, chat logs, and budgets.</p>
           </div>
           <Link
             to="/Tourist/TripPlanner"
-            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-750 text-white rounded-xl text-sm font-bold shadow-sm shadow-blue-200 transition-colors"
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-750 hover:to-indigo-750 text-white rounded-xl text-xs font-bold shadow-md transition-all duration-200"
           >
-            + New Trip
+            + Plan New Trip
           </Link>
         </header>
 
         {/* Filters */}
-        <div className="mb-6 flex gap-2 border-b border-slate-200 pb-3 flex-wrap">
+        <div className="mb-6 flex gap-2 border-b border-slate-200/80 pb-3.5 flex-wrap">
           {[
             { id: "all", label: "All Trips" },
             { id: "upcoming", label: "Upcoming" },
@@ -99,10 +101,10 @@ const MyTrips = () => {
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
                 filter === tab.id
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-100"
+                  : "bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50"
               }`}
             >
               {tab.label} ({
@@ -155,11 +157,11 @@ const MyTrips = () => {
               return (
                 <div 
                   key={trip._id} 
-                  className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
+                  className="bg-white rounded-2xl border border-slate-150/60 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col"
                 >
                   {/* Card Header (Gradient block) */}
-                  <div className={`p-4 text-white ${
-                    isPast ? "bg-gradient-to-r from-slate-600 to-slate-700" :
+                  <div className={`p-5 text-white ${
+                    isPast ? "bg-gradient-to-r from-slate-500 to-slate-600" :
                     isOngoing ? "bg-gradient-to-r from-emerald-500 to-teal-600" :
                     "bg-gradient-to-r from-blue-600 to-indigo-600"
                   }`}>
