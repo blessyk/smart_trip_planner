@@ -749,49 +749,59 @@ const GeneratedTrip = () => {
             </div>
 
             {/* Weather & Safety Risks */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <FaCloudSun className="text-blue-500" /> Weather Forecast
-              </h3>
-              <div className="bg-blue-50 border border-blue-150 rounded-xl p-3.5 space-y-2 text-xs">
-                <p className="font-semibold text-blue-900 leading-snug">{trip.weatherInfo.forecast}</p>
-                {trip.weatherInfo.warnings && trip.weatherInfo.warnings !== "None" && (
-                  <div className="flex gap-1.5 text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-2 font-medium">
-                    <FaExclamationTriangle className="flex-shrink-0 mt-0.5" />
-                    <span>Warning: {trip.weatherInfo.warnings}</span>
-                  </div>
+            {(trip.weatherInfo || trip.riskAnalysis) && (
+              <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
+                {trip.weatherInfo && (
+                  <>
+                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                      <FaCloudSun className="text-blue-500" /> Weather Forecast
+                    </h3>
+                    <div className="bg-blue-50 border border-blue-150 rounded-xl p-3.5 space-y-2 text-xs">
+                      <p className="font-semibold text-blue-900 leading-snug">{trip.weatherInfo.forecast}</p>
+                      {trip.weatherInfo.warnings && trip.weatherInfo.warnings !== "None" && (
+                        <div className="flex gap-1.5 text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-2 font-medium">
+                          <FaExclamationTriangle className="flex-shrink-0 mt-0.5" />
+                          <span>Warning: {trip.weatherInfo.warnings}</span>
+                        </div>
+                      )}
+                      {trip.weatherInfo.recommendations && (
+                        <p className="text-slate-600 text-[11px] leading-relaxed pt-1.5 border-t border-blue-100">
+                          💡 {trip.weatherInfo.recommendations}
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
-                {trip.weatherInfo.recommendations && (
-                  <p className="text-slate-600 text-[11px] leading-relaxed pt-1.5 border-t border-blue-100">
-                    💡 {trip.weatherInfo.recommendations}
-                  </p>
-                )}
-              </div>
 
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pt-2 border-t border-slate-100">
-                <FaExclamationTriangle className="text-blue-500" /> Travel Risk Analysis
-              </h3>
-              <div className={`border rounded-xl p-3.5 space-y-1 text-xs ${
-                trip.riskAnalysis.riskLevel === "High" 
-                  ? "bg-red-50 border-red-200 text-red-900" 
-                  : trip.riskAnalysis.riskLevel === "Moderate"
-                  ? "bg-amber-50 border-amber-200 text-amber-900"
-                  : "bg-emerald-50 border-emerald-250 text-emerald-900"
-              }`}>
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">Risk Level</span>
-                  <span className="uppercase font-extrabold text-[10px] bg-white px-2 py-0.5 rounded-full border">
-                    {trip.riskAnalysis.riskLevel}
-                  </span>
-                </div>
-                <p className="text-[11px] leading-snug pt-1 font-medium">{trip.riskAnalysis.reason}</p>
-                {trip.riskAnalysis.recommendation && (
-                  <p className="text-[10px] text-slate-650 leading-relaxed pt-1 border-t border-black/5 mt-1.5">
-                    🛡️ Suggestion: {trip.riskAnalysis.recommendation}
-                  </p>
+                {trip.riskAnalysis && (
+                  <>
+                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 pt-2 border-t border-slate-100">
+                      <FaExclamationTriangle className="text-blue-500" /> Travel Risk Analysis
+                    </h3>
+                    <div className={`border rounded-xl p-3.5 space-y-1 text-xs ${
+                      trip.riskAnalysis.riskLevel === "High" 
+                        ? "bg-red-50 border-red-200 text-red-900" 
+                        : trip.riskAnalysis.riskLevel === "Moderate"
+                        ? "bg-amber-50 border-amber-200 text-amber-900"
+                        : "bg-emerald-50 border-emerald-255 text-emerald-900"
+                    }`}>
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold">Risk Level</span>
+                        <span className="uppercase font-extrabold text-[10px] bg-white px-2 py-0.5 rounded-full border">
+                          {trip.riskAnalysis.riskLevel}
+                        </span>
+                      </div>
+                      <p className="text-[11px] leading-snug pt-1 font-medium">{trip.riskAnalysis.reason}</p>
+                      {trip.riskAnalysis.recommendation && (
+                        <p className="text-[10px] text-slate-650 leading-relaxed pt-1 border-t border-black/5 mt-1.5">
+                          🛡️ Suggestion: {trip.riskAnalysis.recommendation}
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
-            </div>
+            )}
 
           </div>
         </div>
@@ -806,7 +816,7 @@ const GeneratedTrip = () => {
             </h3>
 
             <div className="space-y-4">
-              {trip.recommendedHotels.map((hotel, idx) => (
+              {(trip.recommendedHotels || []).map((hotel, idx) => (
                 <div key={idx} className="border border-slate-150 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between items-start gap-1">
                     <div>
@@ -845,7 +855,7 @@ const GeneratedTrip = () => {
             </h3>
 
             <div className="space-y-4">
-              {trip.recommendedRestaurants.map((rest, idx) => (
+              {(trip.recommendedRestaurants || []).map((rest, idx) => (
                 <div key={idx} className="border border-slate-150 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between items-start gap-1">
                     <div>

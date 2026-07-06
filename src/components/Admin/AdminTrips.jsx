@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaTrash, FaSuitcase, FaWallet, FaCalendarAlt, FaSpinner } from "react-icons/fa";
+import { FaSearch, FaTrash, FaSuitcase, FaWallet, FaCalendarAlt, FaSpinner, FaEye, FaTimes } from "react-icons/fa";
 import api from "../Utils/api";
 import { toast } from "react-toastify";
 import Pagination from "./Pagination";
@@ -11,6 +11,8 @@ export default function AdminTrips() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState({ totalTrips: 0, totalBudget: 0, avgDays: 0 });
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const limit = 10;
 
   const fetchAllTrips = async () => {
@@ -180,13 +182,25 @@ export default function AdminTrips() {
                           </td>
                           <td className="px-4 py-3 text-slate-500">{createdDate}</td>
                           <td className="px-4 py-3 text-center">
-                            <button
-                              onClick={() => handleDeleteTrip(trip._id, trip.destination)}
-                              className="p-2 bg-red-950/60 hover:bg-red-900/60 text-red-400 rounded-xl transition-colors inline-flex border border-red-800/60"
-                              title="Delete Trip"
-                            >
-                              <FaTrash />
-                            </button>
+                            <div className="flex justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setSelectedTrip(trip);
+                                  setIsDetailModalOpen(true);
+                                }}
+                                className="p-2 bg-emerald-955/40 hover:bg-emerald-900/40 text-emerald-450 rounded-xl transition-colors inline-flex border border-emerald-800/60"
+                                title="View Trip Details"
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTrip(trip._id, trip.destination)}
+                                className="p-2 bg-red-955/40 hover:bg-red-900/40 text-red-450 rounded-xl transition-colors inline-flex border border-red-800/60"
+                                title="Delete Trip"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -208,6 +222,128 @@ export default function AdminTrips() {
         </div>
 
       </div>
+
+      {/* Trip Details Modal */}
+      {isDetailModalOpen && selectedTrip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setIsDetailModalOpen(false)} />
+          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="px-6 py-4 bg-slate-950/60 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-slate-100">Trip to {selectedTrip.destination}</h3>
+                <p className="text-[10px] text-slate-500 mt-0.5">
+                  {selectedTrip.numberOfDays} Days | Budget: ₹{selectedTrip.budget?.toLocaleString("en-IN")}
+                </p>
+              </div>
+              <button onClick={() => setIsDetailModalOpen(false)} className="p-1.5 rounded-lg text-slate-550 hover:bg-slate-800 hover:text-slate-300 transition-colors">
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-slate-350">
+              
+              {/* Creator Info */}
+              <div className="bg-slate-955/20 border border-slate-800 p-4 rounded-xl space-y-2">
+                <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider">👤 Created By</h4>
+                {selectedTrip.userId ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] text-slate-500">Name</p>
+                      <p className="font-semibold text-slate-300">{selectedTrip.userId.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-slate-500">Email Address</p>
+                      <p className="font-semibold text-slate-300">{selectedTrip.userId.email}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-slate-500 italic">Unknown Creator</span>
+                )}
+              </div>
+
+              {/* Weather & Safety Risks */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Weather */}
+                {selectedTrip.weatherInfo && (
+                  <div className="bg-slate-955/20 border border-slate-800 p-4 rounded-xl space-y-1.5">
+                    <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider">🌤️ Weather Forecast</h4>
+                    <p className="font-semibold text-slate-300">{selectedTrip.weatherInfo.forecast}</p>
+                    {selectedTrip.weatherInfo.warnings && selectedTrip.weatherInfo.warnings !== "None" && (
+                      <p className="text-red-400 font-semibold text-[10px]">⚠️ Warning: {selectedTrip.weatherInfo.warnings}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Risk */}
+                {selectedTrip.riskAnalysis && (
+                  <div className="bg-slate-955/20 border border-slate-800 p-4 rounded-xl space-y-1.5">
+                    <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider">🛡️ Risk Analysis</h4>
+                    <p className="font-semibold text-slate-300">Level: <span className={selectedTrip.riskAnalysis.riskLevel === "High" ? "text-red-500" : "text-emerald-500"}>{selectedTrip.riskAnalysis.riskLevel}</span></p>
+                    <p className="text-[10px] text-slate-500 leading-snug">{selectedTrip.riskAnalysis.reason || "No risks reported."}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Itinerary */}
+              {selectedTrip.itinerary && selectedTrip.itinerary.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider border-b border-slate-800 pb-2">📅 Itinerary Schedule</h4>
+                  <div className="space-y-4">
+                    {selectedTrip.itinerary.map((day) => (
+                      <div key={day.day} className="border border-slate-800 rounded-xl p-4 space-y-3 bg-slate-955/10">
+                        <div className="flex justify-between items-center border-b border-slate-800/60 pb-1.5">
+                          <span className="font-bold text-rose-450 text-xs">Day {day.day}</span>
+                          {day.date && <span className="text-[10px] text-slate-500">{day.date}</span>}
+                        </div>
+                        <div className="space-y-3">
+                          {day.schedule && day.schedule.map((item, sIdx) => (
+                            <div key={sIdx} className="space-y-1 pl-2 border-l border-slate-850">
+                              <div className="flex justify-between font-bold text-slate-300">
+                                <span>{item.time} - {item.activity}</span>
+                                {item.cost > 0 && <span className="text-[10px] text-rose-400">₹{item.cost}</span>}
+                              </div>
+                              {item.description && <p className="text-slate-500 text-[10px] leading-relaxed">{item.description}</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommended Hotels */}
+              {selectedTrip.recommendedHotels && selectedTrip.recommendedHotels.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="font-bold text-slate-200 text-xs uppercase tracking-wider border-b border-slate-800 pb-2">🏨 Recommended Accommodations</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedTrip.recommendedHotels.map((hotel, hIdx) => (
+                      <div key={hIdx} className="border border-slate-800 p-3.5 rounded-xl space-y-1.5 bg-slate-955/10">
+                        <h5 className="font-bold text-slate-300">{hotel.hotelName}</h5>
+                        <p className="text-[10px] text-slate-550">📍 {hotel.location} | ★ {hotel.rating}</p>
+                        <p className="text-[10px] text-slate-450 italic">"{hotel.reasonForRecommendation}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 bg-slate-950/40 border-t border-slate-800 flex justify-end">
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-350 text-xs font-semibold rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
