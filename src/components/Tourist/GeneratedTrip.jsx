@@ -3,7 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { 
   FaCalendarAlt, FaWallet, FaUsers, FaSuitcase, FaHotel, FaUtensils, 
   FaCloudSun, FaExclamationTriangle, FaMapMarkedAlt, FaCommentDots, 
-  FaCheckCircle, FaChevronDown, FaChevronUp, FaSpinner, FaStar
+  FaCheckCircle, FaChevronDown, FaChevronUp, FaSpinner, FaStar,
+  FaFilePdf
 } from "react-icons/fa";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import api from "../Utils/api";
@@ -329,6 +330,294 @@ const GeneratedTrip = () => {
     };
   }, [trip, geocodedPoints, isMapMaximized, expandedDay]);
 
+  const handleDownloadPDF = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Please allow popups to download PDF.");
+      return;
+    }
+
+    const startStr = new Date(trip.startDate).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric"
+    });
+    const endStr = new Date(trip.endDate).toLocaleDateString("en-IN", {
+      day: "numeric", month: "long", year: "numeric"
+    });
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>${trip.destination} Itinerary</title>
+          <style>
+            body {
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+              color: #333;
+              line-height: 1.6;
+              padding: 40px;
+              max-width: 900px;
+              margin: 0 auto;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px solid #3b82f6;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .header h1 {
+              margin: 0;
+              color: #1e3a8a;
+              font-size: 28px;
+            }
+            .header p {
+              margin: 5px 0 0 0;
+              color: #4b5563;
+              font-size: 14px;
+            }
+            .meta-grid {
+              display: grid;
+              grid-template-cols: repeat(4, 1fr);
+              gap: 15px;
+              margin-bottom: 30px;
+            }
+            .meta-card {
+              background: #f3f4f6;
+              padding: 15px;
+              border-radius: 8px;
+              text-align: center;
+            }
+            .meta-card span {
+              display: block;
+              font-size: 10px;
+              text-transform: uppercase;
+              color: #6b7280;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .meta-card p {
+              margin: 0;
+              font-size: 16px;
+              font-weight: bold;
+              color: #1f2937;
+            }
+            .section {
+              margin-bottom: 40px;
+              page-break-inside: avoid;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: #1e3a8a;
+              border-bottom: 1px solid #e5e7eb;
+              padding-bottom: 8px;
+              margin-bottom: 15px;
+            }
+            .day-card {
+              border: 1px solid #e5e7eb;
+              border-radius: 10px;
+              padding: 20px;
+              margin-bottom: 20px;
+              background: #fafafa;
+              page-break-inside: avoid;
+            }
+            .day-header {
+              display: flex;
+              justify-content: space-between;
+              font-weight: bold;
+              font-size: 14px;
+              color: #2563eb;
+              border-bottom: 1px solid #e5e7eb;
+              padding-bottom: 10px;
+              margin-bottom: 15px;
+            }
+            .activity-item {
+              margin-bottom: 15px;
+              padding-left: 15px;
+              border-left: 3px solid #d1d5db;
+            }
+            .activity-item:last-child {
+              margin-bottom: 0;
+            }
+            .activity-title {
+              font-weight: bold;
+              font-size: 13px;
+              color: #1f2937;
+              display: flex;
+              justify-content: space-between;
+            }
+            .activity-desc {
+              font-size: 12px;
+              color: #4b5563;
+              margin: 5px 0 0 0;
+            }
+            .recommend-grid {
+              display: grid;
+              grid-template-cols: repeat(2, 1fr);
+              gap: 20px;
+            }
+            .rec-card {
+              border: 1px solid #e5e7eb;
+              border-radius: 10px;
+              padding: 15px;
+              background: #fafafa;
+            }
+            .rec-title {
+              font-weight: bold;
+              font-size: 14px;
+              color: #1f2937;
+              margin: 0 0 5px 0;
+            }
+            .rec-meta {
+              font-size: 11px;
+              color: #6b7280;
+              margin-bottom: 8px;
+            }
+            .rec-reason {
+              font-size: 11px;
+              color: #4b5563;
+              font-style: italic;
+              margin: 0;
+            }
+            .weather-box {
+              background: #eff6ff;
+              border: 1px solid #bfdbfe;
+              padding: 15px;
+              border-radius: 8px;
+              font-size: 13px;
+            }
+            .weather-box p {
+              margin: 5px 0;
+            }
+            .weather-warnings {
+              color: #b45309;
+              background: #fffbeb;
+              padding: 8px 12px;
+              border-radius: 6px;
+              font-weight: bold;
+              font-size: 12px;
+              border: 1px solid #fde68a;
+              margin-top: 10px;
+            }
+            @media print {
+              body {
+                padding: 20px;
+              }
+              .no-print {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Trip Itinerary: ${trip.destination}</h1>
+            <p>${startStr} — ${endStr} (${trip.numberOfDays} Days)</p>
+          </div>
+
+          <div class="meta-grid">
+            <div class="meta-card">
+              <span>Total Budget</span>
+              <p>₹${trip.budget.toLocaleString("en-IN")}</p>
+            </div>
+            <div class="meta-card">
+              <span>Travelers</span>
+              <p>${trip.travelers} ${trip.travelers === 1 ? "Person" : "People"}</p>
+            </div>
+            <div class="meta-card">
+              <span>Accommodation</span>
+              <p>${trip.accommodationPreference}</p>
+            </div>
+            <div class="meta-card">
+              <span>Food Type</span>
+              <p>${trip.foodPreference}</p>
+            </div>
+          </div>
+
+          ${trip.weatherInfo ? `
+            <div class="section">
+              <div class="section-title">🌤️ Weather & Safety Recommendations</div>
+              <div class="weather-box">
+                <p><strong>Forecast:</strong> ${trip.weatherInfo.forecast}</p>
+                ${trip.weatherInfo.warnings && trip.weatherInfo.warnings !== "None" ? `
+                  <div class="weather-warnings">Warning: ${trip.weatherInfo.warnings}</div>
+                ` : ""}
+                ${trip.weatherInfo.recommendations ? `
+                  <p style="margin-top: 10px; color: #555;">💡 ${trip.weatherInfo.recommendations}</p>
+                ` : ""}
+              </div>
+            </div>
+          ` : ""}
+
+          ${trip.itinerary && trip.itinerary.length > 0 ? `
+            <div class="section">
+              <div class="section-title">📅 Daily Schedule Itinerary</div>
+              ${trip.itinerary.map((day) => `
+                <div class="day-card">
+                  <div class="day-header">
+                    <span>Day ${day.day}</span>
+                    <span>${day.date || ""}</span>
+                  </div>
+                  <div>
+                    ${day.schedule && day.schedule.map((item) => `
+                      <div class="activity-item">
+                        <div class="activity-title">
+                          <span>${item.time} — ${item.activity}</span>
+                          ${item.cost > 0 ? `<span>₹${item.cost}</span>` : ""}
+                        </div>
+                        ${item.description ? `<p class="activity-desc">${item.description}</p>` : ""}
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : ""}
+
+          ${trip.recommendedHotels && trip.recommendedHotels.length > 0 ? `
+            <div class="section">
+              <div class="section-title">🏨 Recommended Accommodations</div>
+              <div class="recommend-grid">
+                ${trip.recommendedHotels.map((hotel) => `
+                  <div class="rec-card">
+                    <h5 class="rec-title">${hotel.hotelName}</h5>
+                    <div class="rec-meta">📍 ${hotel.location} | Rating: ★${hotel.rating}</div>
+                    <p class="rec-reason">"${hotel.reasonForRecommendation}"</p>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          ` : ""}
+
+          ${trip.recommendedRestaurants && trip.recommendedRestaurants.length > 0 ? `
+            <div class="section">
+              <div class="section-title">🍽️ Recommended Dining & Local Eats</div>
+              <div class="recommend-grid">
+                ${trip.recommendedRestaurants.map((rest) => `
+                  <div class="rec-card">
+                    <h5 class="rec-title">${rest.restaurantName}</h5>
+                    <div class="rec-meta">🍳 Cuisine: ${rest.cuisine} ${rest.estimatedCost ? `| Cost: ₹${rest.estimatedCost}` : ""}</div>
+                    ${rest.specialty ? `<p class="rec-reason">Specialty: ${rest.specialty}</p>` : ""}
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          ` : ""}
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() {
+                window.close();
+              }, 1000);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-slate-50">
@@ -384,6 +673,12 @@ const GeneratedTrip = () => {
             </div>
             
             <div className="flex gap-3">
+              <button
+                onClick={handleDownloadPDF}
+                className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm transition-colors flex items-center gap-2 shadow-sm cursor-pointer border border-rose-500"
+              >
+                <FaFilePdf /> Download PDF
+              </button>
               <Link
                 to={`/Tourist/chat/${trip._id}`}
                 className="px-5 py-3 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-xl text-sm transition-colors flex items-center gap-2 shadow-sm"
